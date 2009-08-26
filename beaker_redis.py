@@ -10,8 +10,7 @@ log = logging.getLogger(__name__)
  
 class RedisManager(NoSqlManager):
   def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-    NoSqlManager.__init__(self, namespace)    
-    self.open_connection(host, int(port))
+    NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
   def open_connection(self, host, port):
     self.db_conn = Redis(host=host, port=int(port))

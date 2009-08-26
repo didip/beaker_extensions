@@ -3,6 +3,7 @@ import logging
 from beaker.container import NamespaceManager, Container
 from beaker.synchronization import file_synchronizer
 from beaker.util import verify_directory
+from beaker.exceptions import MissingCacheParameter
  
 try:
    import cPickle as pickle

@@ -1,0 +1,17 @@
+== Usage for Pylons ==
+
+1. Put all these files on /your_projects/lib/
+
+2. On /your_project/config/environment.py, add the following:
+
+import your_project.lib.beaker_tyrant as beaker_tyrant
+import beaker
+beaker.cache.clsmap['ext:beaker_tyrant'] = beaker_tyrant.TokyoTyrantManager
+
+3. On your development.ini, add the following
+
+beaker.session.type = ext:beaker_tyrant
+beaker.session.url = 127.0.0.1:1978
+
+Thanks to Jack Hsu for providing the tokyo example:
+http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions

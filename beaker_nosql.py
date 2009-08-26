@@ -63,7 +63,7 @@ class NoSqlManager(NamespaceManager):
     self.db_conn.clear()
 
   def keys(self):
-    raise self.db_conn.keys()
+    return self.db_conn.keys()
  
  
 class NoSqlManagerContainer(Container):

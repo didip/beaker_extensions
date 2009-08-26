@@ -29,7 +29,7 @@ class TokyoTyrantManager(NoSqlManager):
     self.db_conn.clear()
 
   def keys(self):
-    raise self.db_conn.keys()
+    return self.db_conn.keys()
  
  
 class TokyoTyrantContainer(Container):

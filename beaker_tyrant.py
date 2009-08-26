@@ -1,71 +1,36 @@
 # Courtesy of: http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions
-
 import logging
- 
-from beaker.container import NamespaceManager, Container
-from beaker.synchronization import file_synchronizer
-from beaker.util import verify_directory
+from beaker_nosql import *
  
 try:
   from pytyrant import PyTyrant
 except ImportError:
   raise InvalidCacheBackendError("PyTyrant cache backend requires the 'pytyrant' library")
-
-try:
-   import cPickle as pickle
-except:
-   import pickle
  
 log = logging.getLogger(__name__)
  
-class TokyoTyrantManager(NamespaceManager):
+class TokyoTyrantManager(NoSqlManager):
   def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-    NamespaceManager.__init__(self, namespace)
+    NoSqlManager.__init__(self, namespace)    
+    self.open_connection(host, int(port))
 
-    if not url:
-      raise MissingCacheParameter("url is required")
-
-    if lock_dir:
-      self.lock_dir = lock_dir
-    elif data_dir:
-      self.lock_dir = data_dir + "/container_tcd_lock"
-    if self.lock_dir:
-      verify_directory(self.lock_dir)           
-
-    host, port = url.split(':')
-    self.tc = PyTyrant.open(host, int(port))
-
-  def get_creation_lock(self, key):
-    return file_synchronizer(
-      identifier ="tccontainer/funclock/%s" % self.namespace,
-      lock_dir = self.lock_dir)
-
-  def _format_key(self, key):
-    return self.namespace + '_' 
-
-  def __getitem__(self, key):
-    return pickle.loads(self.tc.get(self._format_key(key)))
+  def open_connection(self, host, port):
+    self.db_conn = PyTyrant.open(host, int(port))
 
   def __contains__(self, key):
-    return self.tc.has_key(self._format_key(key))
-
-  def has_key(self, key):
-    return key in self
+    return self.db_conn.has_key(self._format_key(key))
 
   def set_value(self, key, value):
-    self.tc[self._format_key(key)] =  pickle.dumps(value)
-
-  def __setitem__(self, key, value):
-    self.set_value(key, value)
+    self.db_conn[self._format_key(key)] =  pickle.dumps(value)
 
   def __delitem__(self, key):
-    del self.tc[self._format_key(key)]
+    del self.db_conn[self._format_key(key)]
 
   def do_remove(self):
-    self.tc.clear()
+    self.db_conn.clear()
 
   def keys(self):
-    raise self.tc.keys()
+    raise self.db_conn.keys()
  
  
 class TokyoTyrantContainer(Container):

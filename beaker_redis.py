@@ -19,7 +19,7 @@ class RedisManager(NoSqlManager):
     return self.db_conn.exists(self._format_key(key))
 
   def set_value(self, key, value):
-    self.db_conn.set(key, pickle.dumps(value))
+    self.db_conn.set(self._format_key(key), pickle.dumps(value))
 
   def __delitem__(self, key):
     self.db_conn.delete(self._format_key(key))

@@ -22,5 +22,10 @@ setup(name='beaker_extensions',
       ],
       entry_points="""
       # -*- Entry points: -*-
+      [beaker.backends]
+      dynomite = beaker_extensions.dynomite_:DynomiteManager
+      redis = beaker_extensions.redis_:RedisManager
+      ringo = beaker_extensions.ringo:RingoManager
+      tyrant = beaker_extensions.tyrant_:TokyoTyrantManager      
       """,
       )

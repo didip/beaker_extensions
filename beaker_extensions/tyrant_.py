@@ -9,7 +9,7 @@ try:
     from pytyrant import PyTyrant
 except ImportError:
     raise InvalidCacheBackendError("PyTyrant cache backend requires the 'pytyrant' library")
- 
+
 log = logging.getLogger(__name__)
  
 class TokyoTyrantManager(NoSqlManager):

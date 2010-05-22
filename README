@@ -6,7 +6,7 @@ Install directly from git using PIP:
 
 Now you can use the redis, tyrant, dynomite, and ringo extensions.
 
-beaker.session.type = tyant
+beaker.session.type = tyrant
 beaker.session.url = 127.0.0.1:1978
 
 Thanks to Jack Hsu for providing the tokyo example:

@@ -8,7 +8,7 @@ from beaker_extensions.nosql import pickle
 try:
     from ringogw import Ringo
 except ImportError:
-    raise InvalidCacheBackendError("Ringo cache backend requires the 'ringo' library")
+    raise InvalidCacheBackendError("Ringo cache backend requires the 'ringogw' library")
  
 log = logging.getLogger(__name__)
  

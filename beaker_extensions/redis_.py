@@ -8,7 +8,7 @@ from beaker_extensions.nosql import pickle
 try:
     from redis import Redis
 except ImportError:
-    raise InvalidCacheBackendError("PyTyrant cache backend requires the 'pytyrant' library")
+    raise InvalidCacheBackendError("Redis cache backend requires the 'redis' library")
 
 log = logging.getLogger(__name__)
  

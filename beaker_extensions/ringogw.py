@@ -74,7 +74,7 @@ class Ringo:
 
         def request(self, url, data = None, verbose = False,
                         retries = 0, decoder = DecodeJson):
-        
+
                 if self.keep_alive:
                         curl = self.curl
                 else:
@@ -111,7 +111,7 @@ class Ringo:
                         time.sleep(0.1)
                         return self.request(url, data, verbose,
                                         retries - 1, decoder)
-                else: 
+                else:
                         return code, dec.output()
 
 
@@ -121,7 +121,7 @@ class Ringo:
                                 (reply[0], reply[1]))
                         e.retcode = reply[0]
                         e.retvalue = reply[1]
-                        raise e 
+                        raise e
                 return reply[1][1:]
 
         def create(self, domain, nrepl, **kwargs):
@@ -139,7 +139,7 @@ class Ringo:
                 kwargs['decoder'] = DecodeJson
                 return self.check_reply(self.request("/mon/data/%s/%s" %\
                         (domain, key), value, **kwargs))
-                
+
         def get(self, domain, key, **kwargs):
                 url = "/mon/data/%s/%s" % (domain, key)
                 kwargs['data'] = None

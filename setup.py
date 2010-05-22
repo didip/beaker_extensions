@@ -26,6 +26,6 @@ setup(name='beaker_extensions',
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       redis = beaker_extensions.redis_:RedisManager
       ringo = beaker_extensions.ringo:RingoManager
-      tyrant = beaker_extensions.tyrant_:TokyoTyrantManager      
+      tyrant = beaker_extensions.tyrant_:TokyoTyrantManager
       """,
       )

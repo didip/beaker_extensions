@@ -4,14 +4,14 @@ from beaker.exceptions import InvalidCacheBackendError
 from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
- 
+
 try:
     from ringogw import Ringo
 except ImportError:
     raise InvalidCacheBackendError("Ringo cache backend requires the 'ringogw' library")
- 
+
 log = logging.getLogger(__name__)
- 
+
 class RingoManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)

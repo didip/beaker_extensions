@@ -3,23 +3,23 @@ from beaker.exceptions import InvalidCacheBackendError
 
 from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
- 
+
 try:
     from dynomite import Dynomite
     from dynomite.ttypes import *
 except ImportError:
     raise InvalidCacheBackendError("Dynomite cache backend requires the 'dynomite' library")
 
-try: 
+try:
     from thrift import Thrift
     from thrift.transport import TSocket
     from thrift.transport import TTransport
     from thrift.protocol import TBinaryProtocol
 except ImportError:
     raise InvalidCacheBackendError("Dynomite cache backend requires the 'thrift' library")
- 
+
 log = logging.getLogger(__name__)
- 
+
 class DynomiteManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)

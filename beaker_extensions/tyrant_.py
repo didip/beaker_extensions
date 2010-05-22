@@ -1,7 +1,8 @@
 # Courtesy of: http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions
 import logging
+from beaker.exceptions import InvalidCacheBackendError
+
 from beaker_extensions.nosql import Container
-from beaker_extensions.nosql import InvalidCacheBackendError
 from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
  

@@ -28,8 +28,11 @@ class RedisManager(NoSqlManager):
     def __delitem__(self, key):
         self.db_conn.delete(self._format_key(key))
 
+    def _format_key(self, key):
+        return 'beaker:%s:%s' % (self.namespace, key)
+
     def do_remove(self):
-        self.db_conn.flush(all_dbs=True)
+        self.db_conn.flush()
 
     def keys(self):
         raise self.db_conn.keys('*')

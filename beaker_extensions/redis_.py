@@ -20,12 +20,15 @@ class RedisManager(NoSqlManager):
         self.db_conn = Redis(host=host, port=int(port))
 
     def __contains__(self, key):
+        key = self._format_key(key)
         return self.db_conn.exists(self._format_key(key))
 
     def set_value(self, key, value):
+        key = self._format_key(key)
         self.db_conn.set(key, pickle.dumps(value))
 
     def __delitem__(self, key):
+        key = self._format_key(key)
         self.db_conn.delete(self._format_key(key))
 
     def _format_key(self, key):
@@ -35,7 +38,7 @@ class RedisManager(NoSqlManager):
         self.db_conn.flush()
 
     def keys(self):
-        raise self.db_conn.keys('*')
+        raise self.db_conn.keys('beaker:%s:*' % self.namespace)
 
 
 class RedisContainer(Container):

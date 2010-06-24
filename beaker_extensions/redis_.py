@@ -16,8 +16,8 @@ class RedisManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
-    def open_connection(self, host, port):
-        self.db_conn = Redis(host=host, port=int(port))
+    def open_connection(self, host, port, **params):
+        self.db_conn = Redis(host=host, port=int(port), **params)
 
     def __contains__(self, key):
         key = self._format_key(key)

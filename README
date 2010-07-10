@@ -4,7 +4,7 @@ Install directly from git using PIP:
 
     pip install git+git://github.com/bbangert/beaker_extensions.git
 
-Now you can use the redis, tyrant, dynomite, and ringo extensions.
+Now you can use the redis, tyrant, riak, dynomite, and ringo extensions.
 
 beaker.session.type = tyrant
 beaker.session.url = 127.0.0.1:1978

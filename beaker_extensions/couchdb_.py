@@ -40,6 +40,7 @@ class CouchDBManager(NoSqlManager):
             doc = self.db_conn[key]
         except ResourceNotFound:
             doc['_id'] = key
+            doc['type'] = 'beaker.session'
         doc['value'] = pickle.dumps(value)
         self.db_conn.save(doc)
 
@@ -52,7 +53,13 @@ class CouchDBManager(NoSqlManager):
         return 'beaker:%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
 
     def do_remove(self):
-        raise Exception("Unimplemented")
+        map_fun = '''function(doc) {
+            if (doc.type == 'beaker.session')
+                emit(doc.id, null);
+        }'''
+        for row in self.db_conn.query(map_fun):
+            doc = self.db_conn.get(row.id)
+            self.db_conn.delete(doc)
 
     def keys(self):
         raise Exception("Unimplemented")

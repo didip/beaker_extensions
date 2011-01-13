@@ -23,6 +23,9 @@ class NoSqlManager(NamespaceManager):
             self.lock_dir = lock_dir
         elif data_dir:
             self.lock_dir = data_dir + "/container_tcd_lock"
+        else:
+            self.lock_dir = None
+            
         if self.lock_dir:
             verify_directory(self.lock_dir)           
 

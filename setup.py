@@ -27,5 +27,6 @@ setup(name='beaker_extensions',
       redis = beaker_extensions.redis_:RedisManager
       ringo = beaker_extensions.ringo:RingoManager
       tyrant = beaker_extensions.tyrant_:TokyoTyrantManager
+      couchdb = beaker_extensions.couchdb_:CouchDBManager
       """,
       )

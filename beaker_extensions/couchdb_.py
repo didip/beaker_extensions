@@ -31,7 +31,10 @@ class CouchDBManager(NoSqlManager):
         return True
 
     def __getitem__(self, key):
-        return pickle.loads(self.db_conn[self._format_key(key)]['value'])
+        try:
+            return pickle.loads(self.db_conn[self._format_key(key)]['value'])
+        except ResourceNotFound:
+            return None
 
     def set_value(self, key, value):
         key = self._format_key(key)

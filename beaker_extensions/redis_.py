@@ -29,7 +29,7 @@ class RedisManager(NoSqlManager):
 
     def __delitem__(self, key):
         key = self._format_key(key)
-        self.db_conn.delete(self._format_key(key))
+        self.db_conn.delete(key)
 
     def _format_key(self, key):
         return 'beaker:%s:%s' % (self.namespace, key.replace(' ', '\302\267'))

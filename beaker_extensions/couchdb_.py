@@ -45,7 +45,13 @@ class CouchDBManager(NoSqlManager):
             doc['_id'] = key
             doc['type'] = 'beaker.session'
         doc['value'] = pickle.dumps(value)
-        self.db_conn.save(doc)
+        while True:
+            try:
+                self.db_conn.save(doc)
+                break
+            except ResourceConflict:
+                doc = self.db_conn[key]
+                doc['value'] = pickle.dumps(value)
 
     def __delitem__(self, key):
         key = self._format_key(key)

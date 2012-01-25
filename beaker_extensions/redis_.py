@@ -22,9 +22,12 @@ class RedisManager(NoSqlManager):
     def __contains__(self, key):
         return self.db_conn.exists(self._format_key(key))
 
-    def set_value(self, key, value):
+    def set_value(self, key, value, expiretime=None):
         key = self._format_key(key)
-        self.db_conn.set(key, pickle.dumps(value))
+        if expiretime:
+            self.db_conn.setex(key, expiretime, pickle.dumps(value))
+        else:
+            self.db_conn.set(key, pickle.dumps(value))
 
     def __delitem__(self, key):
         key = self._format_key(key)

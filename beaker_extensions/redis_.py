@@ -40,7 +40,7 @@ class RedisManager(NoSqlManager):
         self.db_conn.flush()
 
     def keys(self):
-        raise self.db_conn.keys('beaker:%s:*' % self.namespace)
+        return self.db_conn.keys('beaker:%s:*' % self.namespace)
 
 
 class RedisContainer(Container):

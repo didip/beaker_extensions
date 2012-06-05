@@ -51,8 +51,8 @@ class CassandraManager(NoSqlManager):
 
     def __getitem__(self, key):
         try:
-            result = self.cf.get(key)
-            return result['data']
+            result = self.cf.get(self._format_key(key))
+            return pickle.loads(result['data'])
         except pycassa.NotFoundException:
             return None
 

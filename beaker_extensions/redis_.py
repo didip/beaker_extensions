@@ -14,10 +14,11 @@ log = logging.getLogger(__name__)
 
 class RedisManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
+        self.db = params.pop('db', None)
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
     def open_connection(self, host, port, **params):
-        self.db_conn = Redis(host=host, port=int(port), **params)
+        self.db_conn = Redis(host=host, port=int(port), db=self.db, **params)
 
     def __contains__(self, key):
         return self.db_conn.exists(self._format_key(key))

@@ -26,7 +26,7 @@ class RedisManager(NoSqlManager):
     def set_value(self, key, value, expiretime=None):
         key = self._format_key(key)
         if expiretime:
-            self.db_conn.setex(key, expiretime, pickle.dumps(value))
+            self.db_conn.setex(key, pickle.dumps(value), expiretime)
         else:
             self.db_conn.set(key, pickle.dumps(value))
 

@@ -6,7 +6,7 @@ from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
 
 try:
-    from redis import Redis
+    from redis import StrictRedis
 except ImportError:
     raise InvalidCacheBackendError("Redis cache backend requires the 'redis' library")
 
@@ -18,7 +18,7 @@ class RedisManager(NoSqlManager):
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
     def open_connection(self, host, port, **params):
-        self.db_conn = Redis(host=host, port=int(port), db=self.db, **params)
+        self.db_conn = StrictRedis(host=host, port=int(port), db=self.db, **params)
 
     def __contains__(self, key):
         return self.db_conn.exists(self._format_key(key))

@@ -39,7 +39,6 @@ class RedisManager(NoSqlManager):
             self.db_conn.set(key, pickle.dumps(value))
 
     def __delitem__(self, key):
-        key = self._format_key(key)
         self.db_conn.delete(self._format_key(key))
 
     def _format_key(self, key):

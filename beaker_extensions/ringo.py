@@ -40,4 +40,4 @@ class RingoManager(NoSqlManager):
 
 
 class RingoContainer(Container):
-    namespace_manager = RingoManager
+    namespace_class = RingoManager

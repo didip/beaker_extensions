@@ -72,4 +72,4 @@ class CassandraManager(NoSqlManager):
 
 
 class CassandraContainer(Container):
-    namespace_manager = CassandraManager
+    namespace_class = CassandraManager

@@ -42,4 +42,4 @@ class RiakManager(NoSqlManager):
 
 
 class RiakContainer(Container):
-    namespace_manager = RiakManager
+    namespace_class = RiakManager

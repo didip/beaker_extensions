@@ -51,4 +51,4 @@ class DynomiteManager(NoSqlManager):
 
 
 class DynomiteContainer(Container):
-    namespace_manager = DynomiteManager
+    namespace_class = DynomiteManager

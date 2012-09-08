@@ -73,4 +73,4 @@ class NoSqlManager(NamespaceManager):
 
 
 class NoSqlManagerContainer(Container):
-    namespace_manager = NoSqlManager
+    namespace_class = NoSqlManager

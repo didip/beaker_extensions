@@ -37,4 +37,4 @@ class TokyoTyrantManager(NoSqlManager):
 
 
 class TokyoTyrantContainer(Container):
-    namespace_manager = TokyoTyrantManager
+    namespace_class = TokyoTyrantManager

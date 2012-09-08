@@ -52,4 +52,4 @@ class RedisManager(NoSqlManager):
 
 
 class RedisContainer(Container):
-    namespace_manager = RedisManager
+    namespace_class = RedisManager

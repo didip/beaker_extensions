@@ -3,6 +3,8 @@ import sys, os
 
 version = '0.2.0'
 
+tests_require = ['nose', 'webtest']
+
 setup(name='beaker_extensions',
       version=version,
       description="Beaker extensions for additional back-end stores.",
@@ -20,6 +22,8 @@ setup(name='beaker_extensions',
       install_requires=[
           # -*- Extra requirements: -*-
       ],
+      test_suite='nose.collector',
+      tests_require=tests_require,
       entry_points="""
       # -*- Entry points: -*-
       [beaker.backends]
@@ -29,5 +33,6 @@ setup(name='beaker_extensions',
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       ringo = beaker_extensions.ringo:RingoManager
       cassandra = beaker_extensions.cassandra:CassandraManager
+      couchdb = beaker_extensions.couchdb_:CouchDBManager
       """,
       )

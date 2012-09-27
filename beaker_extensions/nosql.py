@@ -13,7 +13,7 @@ except:
 log = logging.getLogger(__name__)
  
 class NoSqlManager(NamespaceManager):
-    def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
+    def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, expire=None, **params):
         NamespaceManager.__init__(self, namespace)
 
         if not url:
@@ -25,6 +25,8 @@ class NoSqlManager(NamespaceManager):
             self.lock_dir = data_dir + "/container_tcd_lock"
         if hasattr(self, 'lock_dir'):
             verify_directory(self.lock_dir)           
+
+        self._expiretime = int(expire) if expire else None
 
         conn_params = {}
         parts = url.split('?', 1)
@@ -60,7 +62,7 @@ class NoSqlManager(NamespaceManager):
         self.db_conn[self._format_key(key)] =  pickle.dumps(value)
 
     def __setitem__(self, key, value):
-        self.set_value(key, value)
+        self.set_value(key, value, self._expiretime)
 
     def __delitem__(self, key):
         del self.db_conn[self._format_key(key)]

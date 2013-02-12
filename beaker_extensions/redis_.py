@@ -29,12 +29,12 @@ class RedisManager(NoSqlManager):
                               **params)
 
     def open_connection(self, host, port, **params):
-        if (not self.connection_pools or
-                self._format_pool_key(host, port, self.db) not in self.connection_pools):
-            self.connection_pools[self._format_pool_key(host, port, self.db)] = ConnectionPool(host=host,
-                                                                                          port=port,
-                                                                                          db=self.db)
-        self.db_conn = StrictRedis(connection_pool=self.connection_pools[self._format_pool_key(host, port, self.db)],
+        pool_key = self._format_pool_key(host, port, self.db)
+        if pool_key not in self.connection_pools:
+            self.connection_pools[pool_key] = ConnectionPool(host=host,
+                                                             port=port,
+                                                             db=self.db)
+        self.db_conn = StrictRedis(connection_pool=self.connection_pools[pool_key],
                                    **params)
 
     def __contains__(self, key):

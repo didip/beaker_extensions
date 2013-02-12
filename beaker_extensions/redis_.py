@@ -6,7 +6,7 @@ from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
 
 try:
-    from redis import StrictRedis
+    from redis import StrictRedis, ConnectionPool
 except ImportError:
     raise InvalidCacheBackendError("Redis cache backend requires the 'redis' library")
 
@@ -20,6 +20,7 @@ class RedisManager(NoSqlManager):
                  lock_dir=None,
                  **params):
         self.db = params.pop('db', None)
+        self.connection_pools = {}
         NoSqlManager.__init__(self,
                               namespace,
                               url=url,
@@ -28,13 +29,12 @@ class RedisManager(NoSqlManager):
                               **params)
 
     def open_connection(self, host, port, **params):
-        if (hasattr(self, 'db_conn') and
-            self.db_conn.host == host and
-            self.db_conn.port == port:
-            return
-        self.db_conn = StrictRedis(host=host,
-                                   port=int(port),
-                                   db=self.db,
+        if (not self.connection_pools or
+                self._format_pool_key(host, port, self.db) not in self.connection_pools):
+            self.connection_pools[self._format_pool_key(host, port, self.db)] = ConnectionPool(host=host,
+                                                                                          port=port,
+                                                                                          db=self.db)
+        self.db_conn = StrictRedis(connection_pool=self.connection_pools[self._format_pool_key(host, port, self.db)],
                                    **params)
 
     def __contains__(self, key):
@@ -63,6 +63,9 @@ class RedisManager(NoSqlManager):
 
     def _format_key(self, key):
         return 'beaker:%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
+
+    def _format_pool_key(self, host, port, db):
+        return '{0}:{1}:{2}'.format(host, port, self.db)
 
     def do_remove(self):
         self.db_conn.flush()

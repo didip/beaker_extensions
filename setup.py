@@ -25,7 +25,7 @@ setup(name='beaker_extensions',
       [beaker.backends]
       redis = beaker_extensions.redis_:RedisManager
       tyrant = beaker_extensions.tyrant_:TokyoTyrantManager
-      riak = beaker_extensions.riak:RiakManager
+      riak = beaker_extensions.riak_:RiakManager
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       ringo = beaker_extensions.ringo:RingoManager
       cassandra = beaker_extensions.cassandra:CassandraManager

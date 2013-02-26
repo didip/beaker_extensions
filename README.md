@@ -3,7 +3,7 @@
 Install directly from git using PIP:
 
 ```
-pip install git+git://github.com/andrewzeneski/beaker_extensions.git
+pip install git+git://github.com/didip/beaker_extensions.git
 ```
 
 Now you can use the redis, tyrant, riak, dynomite, and ringo extensions.

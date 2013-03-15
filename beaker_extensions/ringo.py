@@ -27,7 +27,7 @@ class RingoManager(NoSqlManager):
         return pickle.loads(self.db_conn.get(self.domain, self._format_key(key)))
 
     def set_value(self, key, value):
-        self.db_conn.put(self.domain, self._format_key(key), pickle.dumps(value))
+        self.db_conn.put(self.domain, self._format_key(key), pickle.dumps(value, 2))
 
     def __delitem__(self, key):
         raise Exception("Unimplemented")

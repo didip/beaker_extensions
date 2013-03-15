@@ -57,7 +57,7 @@ class NoSqlManager(NamespaceManager):
         return key in self
 
     def set_value(self, key, value):
-        self.db_conn[self._format_key(key)] =  pickle.dumps(value)
+        self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
 
     def __setitem__(self, key, value):
         self.set_value(key, value)

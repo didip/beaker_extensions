@@ -47,7 +47,7 @@ class CassandraManager(NoSqlManager):
 
     def set_value(self, key, value, expiretime=None):
         key = self._format_key(key)
-        self.cf.insert(key, {'data': pickle.dumps(value)}, ttl=expiretime)
+        self.cf.insert(key, {'data': pickle.dumps(value, 2)}, ttl=expiretime)
 
     def __getitem__(self, key):
         try:

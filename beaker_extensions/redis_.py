@@ -54,9 +54,9 @@ class RedisManager(NoSqlManager):
             expiretime = value[1]
 
         if expiretime:
-            self.db_conn.setex(key, expiretime, pickle.dumps(value))
+            self.db_conn.setex(key, expiretime, pickle.dumps(value, 2))
         else:
-            self.db_conn.set(key, pickle.dumps(value))
+            self.db_conn.set(key, pickle.dumps(value, 2))
 
     def __delitem__(self, key):
         self.db_conn.delete(self._format_key(key))

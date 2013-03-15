@@ -24,7 +24,7 @@ class TokyoTyrantManager(NoSqlManager):
         return self.db_conn.has_key(self._format_key(key))
 
     def set_value(self, key, value):
-        self.db_conn[self._format_key(key)] =  pickle.dumps(value)
+        self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
 
     def __delitem__(self, key):
         del self.db_conn[self._format_key(key)]

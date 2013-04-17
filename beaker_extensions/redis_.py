@@ -20,6 +20,7 @@ class RedisManager(NoSqlManager):
                  lock_dir=None,
                  **params):
         self.db = params.pop('db', None)
+        self.dbpass = params.pop('password', None)
         self.connection_pools = {}
         NoSqlManager.__init__(self,
                               namespace,
@@ -33,7 +34,8 @@ class RedisManager(NoSqlManager):
         if pool_key not in self.connection_pools:
             self.connection_pools[pool_key] = ConnectionPool(host=host,
                                                              port=port,
-                                                             db=self.db)
+                                                             db=self.db,
+                                                             password=self.dbpass)
         self.db_conn = StrictRedis(connection_pool=self.connection_pools[pool_key],
                                    **params)
 

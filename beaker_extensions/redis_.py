@@ -13,6 +13,9 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 class RedisManager(NoSqlManager):
+
+    connection_pools = {}
+
     def __init__(self,
                  namespace,
                  url=None,
@@ -21,7 +24,6 @@ class RedisManager(NoSqlManager):
                  **params):
         self.db = params.pop('db', None)
         self.dbpass = params.pop('password', None)
-        self.connection_pools = {}
         NoSqlManager.__init__(self,
                               namespace,
                               url=url,

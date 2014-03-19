@@ -1,3 +1,4 @@
+import json
 import logging
 from beaker.exceptions import InvalidCacheBackendError
 
@@ -57,10 +58,15 @@ class RedisManager(NoSqlManager):
         if (expiretime is None) and (type(value) is tuple):
             expiretime = value[1]
 
-        if expiretime:
-            self.db_conn.setex(key, expiretime, pickle.dumps(value, 2))
+        if self.serializer == 'json':
+            serialized_value = json.dumps(value, ensure_ascii=True)
         else:
-            self.db_conn.set(key, pickle.dumps(value, 2))
+            serialized_value = pickle.dumps(value, 2)
+
+        if expiretime:
+            self.db_conn.setex(key, expiretime, serialized_value)
+        else:
+            self.db_conn.set(key, serialized_value)
 
     def __delitem__(self, key):
         self.db_conn.delete(self._format_key(key))

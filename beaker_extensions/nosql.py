@@ -1,3 +1,4 @@
+import json
 import logging
  
 from beaker.container import NamespaceManager, Container
@@ -24,7 +25,10 @@ class NoSqlManager(NamespaceManager):
         elif data_dir:
             self.lock_dir = data_dir + "/container_tcd_lock"
         if hasattr(self, 'lock_dir'):
-            verify_directory(self.lock_dir)           
+            verify_directory(self.lock_dir)
+
+        # Specify the serializer to use (pickle or json?)
+        self.serializer = params.pop('serializer', 'pickle')
 
         self._expiretime = int(expire) if expire else None
 
@@ -50,7 +54,14 @@ class NoSqlManager(NamespaceManager):
         return self.namespace + '_' 
 
     def __getitem__(self, key):
-        return pickle.loads(self.db_conn.get(self._format_key(key)))
+        if self.serializer == 'json':
+            payload = self.db_conn.get(self._format_key(key))
+            if isinstance(payload, bytes):
+                return json.loads(payload.decode('utf-8'))
+            else:
+                return json.loads(payload)
+        else:
+            return pickle.loads(self.db_conn.get(self._format_key(key)))
 
     def __contains__(self, key):
         return self.db_conn.has_key(self._format_key(key))
@@ -59,7 +70,10 @@ class NoSqlManager(NamespaceManager):
         return key in self
 
     def set_value(self, key, value):
-        self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
+        if self.serializer == 'json':
+            self.db_conn[self._format_key(key)] = json.dumps(value, ensure_ascii=True)
+        else:
+            self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
 
     def __setitem__(self, key, value):
         self.set_value(key, value, self._expiretime)

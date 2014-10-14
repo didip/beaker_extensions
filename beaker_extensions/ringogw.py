@@ -96,15 +96,14 @@ class Ringo:
                 curl.setopt(curl.WRITEFUNCTION, dec.write)
                 try:
                         curl.perform()
-                except pycurl.error, x:
+                except pycurl.error as x:
                         if verbose:
-                                print "Pycurl.error:", x
+                                print("Pycurl.error:", x)
                         return x
 
                 code = curl.getinfo(curl.HTTP_CODE)
                 if verbose:
-                        print "Request took %.2fms" %\
-                                (curl.getinfo(curl.TOTAL_TIME) * 1000.0)
+                        print("Request took %.2fms" % (curl.getinfo(curl.TOTAL_TIME) * 1000.0))
 
                 # Request timeout
                 if code == 408 and retries > 0:

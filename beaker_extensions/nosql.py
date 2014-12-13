@@ -64,7 +64,8 @@ class NoSqlManager(NamespaceManager):
             return pickle.loads(self.db_conn.get(self._format_key(key)))
 
     def __contains__(self, key):
-        return self.db_conn.has_key(self._format_key(key))
+        identifier = self._format_key(key)
+        return identifier in self.db_conn
 
     def has_key(self, key):
         return key in self

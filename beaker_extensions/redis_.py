@@ -25,6 +25,7 @@ class RedisManager(NoSqlManager):
                  **params):
         self.db = params.pop('db', None)
         self.dbpass = params.pop('password', None)
+        self._format_key = params.pop('format_key', self._format_beaker_key)
         NoSqlManager.__init__(self,
                               namespace,
                               url=url,
@@ -71,7 +72,7 @@ class RedisManager(NoSqlManager):
     def __delitem__(self, key):
         self.db_conn.delete(self._format_key(key))
 
-    def _format_key(self, key):
+    def _format_beaker_key(self, key):
         return 'beaker:%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
 
     def _format_pool_key(self, host, port, db):

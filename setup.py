@@ -28,6 +28,6 @@ setup(name='beaker_extensions',
       riak = beaker_extensions.riak_:RiakManager
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       ringo = beaker_extensions.ringo:RingoManager
-      cassandra = beaker_extensions.cassandra:CassandraManager
+      cassandra = beaker_extensions.cassandra_pycassa:CassandraManager
       """,
       )

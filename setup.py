@@ -35,7 +35,7 @@ setup(name='beaker_extensions',
       riak = beaker_extensions.riak_:RiakManager
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       ringo = beaker_extensions.ringo:RingoManager
-      cassandra = beaker_extensions.cassandra_pycassa:CassandraManager
-      cassandra_binary = beaker_extensions.cassandra_binary:CassandraBinaryManager
+      cassandra = beaker_extensions.cassandra_thrift:CassandraManager
+      cassandra_cql = beaker_extensions.cassandra_cql:CassandraCqlManager
       """,
       )

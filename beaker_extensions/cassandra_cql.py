@@ -13,19 +13,19 @@ try:
     from cassandra.cluster import Cluster
 except ImportError:
     raise InvalidCacheBackendError(
-        "cassandra_binary backend requires the 'cassandra-driver' library"
+        "cassandra_cql backend requires the 'cassandra-driver' library"
     )
 
 
 log = logging.getLogger(__name__)
 
 
-class CassandraBinaryManager(NoSqlManager):
+class CassandraCqlManager(NoSqlManager):
     """
     Cassandra backend for beaker that uses the more efficient binary protocol.
 
     Configuration example:
-        beaker.session.type = cassandra
+        beaker.session.type = cassandra_cql
         beaker.session.url = localhost:9160
         beaker.session.keyspace = Keyspace1
         beaker.session.column_family = beaker
@@ -165,5 +165,5 @@ class CassandraBinaryManager(NoSqlManager):
         )
 
 
-class CassandraBinaryContainer(Container):
-    namespace_class = CassandraBinaryManager
+class CassandraCqlContainer(Container):
+    namespace_class = CassandraCqlManager

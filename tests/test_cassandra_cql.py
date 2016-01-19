@@ -8,7 +8,7 @@ from beaker.cache import Cache
 from common import CommonMethodMixin
 
 
-class CassandraBinarySetup(object):
+class CassandraCqlSetup(object):
     __keyspace = 'test_ks'
     __table = 'test_table'
 
@@ -42,30 +42,30 @@ class CassandraBinarySetup(object):
         cls.__session.execute(query)
 
     def setUp(self):
-        self.cache = Cache('testns', type='cassandra_binary',
+        self.cache = Cache('testns', type='cassandra_cql',
                            url='localhost:9042', keyspace=self.__keyspace,
                            column_family=self.__table, serializer='json')
         self.cache.clear()
 
 
-@attr('cassandra_binary')
-class TestCassandraBinary(CassandraBinarySetup, CommonMethodMixin, unittest.TestCase):
+@attr('cassandra_cql')
+class TestCassandraCql(CassandraCqlSetup, CommonMethodMixin, unittest.TestCase):
     @nottest
     def test_fresh_createfunc(self):
         # createfunc depends on create_lock being implemented which it isn't for
-        # casandra_binary, so skip this test which would otherwise run from
+        # casandra_cql, so skip this test which would otherwise run from
         # CommonMethodMixin.
         pass
 
     @nottest
     def test_multi_keys(self):
-        # This also uses createfunc which it isn't for casandra_binary, so skip
+        # This also uses createfunc which it isn't for casandra_cql, so skip
         # this test which would otherwise run from CommonMethodMixin.
         pass
 
     def test_invalid_keyspace(self):
         try:
-            Cache('testns', type='cassandra_binary', url='localhost:9042',
+            Cache('testns', type='cassandra_cql', url='localhost:9042',
                   keyspace='no spaces allowed', column_family='whatever',
                   serializer='json')
         except ValueError, error:
@@ -74,7 +74,7 @@ class TestCassandraBinary(CassandraBinarySetup, CommonMethodMixin, unittest.Test
 
     def test_invalid_table(self):
         try:
-            Cache('testns', type='cassandra_binary', url='localhost:9042',
+            Cache('testns', type='cassandra_cql', url='localhost:9042',
                   keyspace='whatever', column_family='no spaces allowed',
                   serializer='json')
         except ValueError, error:

@@ -173,3 +173,21 @@ class CommonMethodMixin(object):
 
         assert 'howdy' == cache.get_value('key2', createfunc=create_func)
         assert called == {}
+
+    def test_store_obj(self):
+        # via set_value
+        err = Exception("Too much partying")
+        assert 'err' not in self.cache
+        self.cache.set_value('err', err)
+        assert 'err' in self.cache
+        got = self.cache.get_value('err')
+        assert type(got) == Exception
+        assert got.message == "Too much partying"
+
+        # via dict interface
+        assert 'key2' not in self.cache
+        self.cache['key2'] = err
+        assert 'key2' in self.cache
+        got2 = self.cache.get_value('key2')
+        assert type(got2) == Exception
+        assert got2.message == "Too much partying"

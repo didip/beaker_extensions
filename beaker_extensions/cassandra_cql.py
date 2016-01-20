@@ -50,13 +50,7 @@ class CassandraCqlManager(NoSqlManager):
         self.__table_cql_safe = table
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
                               lock_dir=lock_dir, **params)
-        if self.serializer == 'pickle':
-            raise NotImplementedError(
-                "Cassandra was getting angry at pickle output not being"
-                "utf-8. Since we don't particularly want to be using pickle, "
-                "punt on the issue and only support json for now."
-            )
-        assert self.serializer == 'json'
+        assert self.serializer in ['pickle', 'json']
 
     def open_connection(self, host, port, **params):
         cluster = Cluster()
@@ -75,7 +69,7 @@ class CassandraCqlManager(NoSqlManager):
             query = '''
                 CREATE TABLE {tbl} (
                   key varchar,
-                  data varchar,
+                  data blob,
                   PRIMARY KEY (key)
                 )
             '''.format(tbl=self.__table_cql_safe)
@@ -125,14 +119,17 @@ class CassandraCqlManager(NoSqlManager):
 
     def set_value(self, key, value, expiretime=None):
         key = self.__format_key(key)
-        data = json.dumps(value)
+        if self.serializer == 'json':
+            encoded = json.dumps(value, ensure_ascii=True)
+        else:
+            encoded =  pickle.dumps(value, 2)
         if expiretime:
             ttl = int(expiretime)
             self.__session.execute(self.__set_expire_stmt,
-                                   {'key': key, 'data': data, 'ttl': ttl})
+                                   {'key': key, 'data': encoded, 'ttl': ttl})
         else:
             self.__session.execute(self.__set_no_expire_stmt,
-                                   {'key': key, 'data': data})
+                                   {'key': key, 'data': encoded})
 
     def __getitem__(self, key):
         key = self.__format_key(key)
@@ -141,10 +138,13 @@ class CassandraCqlManager(NoSqlManager):
             return None
         assert len(rows) == 1, "get {} returned more than 1 row".format(key)
         encoded = rows[0].data
-        if isinstance(encoded, bytes):
-            return json.loads(encoded.decode('utf-8'))
+        if self.serializer == 'json':
+            if isinstance(encoded, bytes):
+                return json.loads(encoded.decode('utf-8'))
+            else:
+                return json.loads(encoded)
         else:
-            return json.loads(encoded)
+            return pickle.loads(encoded)
 
     def __delitem__(self, key):
         key = self.__format_key(key)

@@ -42,14 +42,31 @@ class CassandraCqlSetup(object):
         cls.__session.execute(query)
 
     def setUp(self):
+        raise NotImplementedError
+
+
+class CassandraCqlPickleSetup(object):
+    __keyspace = 'test_ks'
+    __table = 'test_table'
+
+    def setUp(self):
+        self.cache = Cache('testns', type='cassandra_cql',
+                           url='localhost:9042', keyspace=self.__keyspace,
+                           column_family=self.__table, serializer='pickle')
+        self.cache.clear()
+
+class CassandraCqlJsonSetup(object):
+    __keyspace = 'test_ks'
+    __table = 'test_table'
+
+    def setUp(self):
         self.cache = Cache('testns', type='cassandra_cql',
                            url='localhost:9042', keyspace=self.__keyspace,
                            column_family=self.__table, serializer='json')
         self.cache.clear()
 
 
-@attr('cassandra_cql')
-class TestCassandraCql(CassandraCqlSetup, CommonMethodMixin, unittest.TestCase):
+class CassandraTestOverrides(object):
     @nottest
     def test_fresh_createfunc(self):
         # createfunc depends on create_lock being implemented which it isn't for
@@ -80,3 +97,21 @@ class TestCassandraCql(CassandraCqlSetup, CommonMethodMixin, unittest.TestCase):
         except ValueError, error:
             if 'table can only have' not in error.message:
                 raise
+
+
+@attr('cassandra_cql')
+class TestCassandraCqlPickle(CassandraCqlPickleSetup, CassandraCqlSetup,
+                             CassandraTestOverrides, CommonMethodMixin,
+                             unittest.TestCase):
+    pass
+
+
+@attr('cassandra_cql')
+class TestCassandraCqlJson(CassandraCqlJsonSetup, CassandraCqlSetup,
+                           CassandraTestOverrides, CommonMethodMixin,
+                           unittest.TestCase):
+    @nottest
+    def test_store_obj(self):
+        # We can't store objects with the json serializer so skip this test from
+        # the CommonMethodMixin.
+        pass

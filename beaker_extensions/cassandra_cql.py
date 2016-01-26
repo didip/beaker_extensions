@@ -33,6 +33,7 @@ class CassandraCqlManager(NoSqlManager):
     The default column_family is 'beaker'.
     If it doesn't exist under given keyspace, it is created automatically.
     """
+
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None,
                  keyspace=None, column_family=None, **params):
         if not keyspace:
@@ -50,7 +51,6 @@ class CassandraCqlManager(NoSqlManager):
         self.__table_cql_safe = table
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
                               lock_dir=lock_dir, **params)
-        assert self.serializer in ['pickle', 'json']
 
     def open_connection(self, host, port, **params):
         cluster = Cluster()

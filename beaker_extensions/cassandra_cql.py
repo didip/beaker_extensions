@@ -37,8 +37,49 @@ class CassandraCqlManager(NoSqlManager):
     If it doesn't exist under given keyspace, it is created automatically.
     """
 
+    connection_pools = {}
+
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None,
                  keyspace=None, column_family=None, **params):
+        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
+                              lock_dir=lock_dir, **params)
+        connection_key = '-'.join([
+            '%r' % url,
+            '%r' % keyspace,
+            '%r' % column_family,
+        ] + ['%s:%r' % (k, params[k]) for k in params])
+        log.info("Looking for existing connection with params %s",
+                 connection_key) # TODO remove this before going to prod
+        if connection_key in self.connection_pools:
+            self.db_conn = self.connection_pools[connection_key]
+        else:
+            self.db_conn = _CassandraBackedDict(namespace, url, keyspace,
+                                                column_family, **params)
+            self.connection_pools[connection_key] = self.db_conn
+
+    def open_connection(self, host, port, **params):
+        # NoSqlManager calls this but it's not quite the interface I want so
+        # ignore it.
+        pass
+
+    def __setitem__(self, key, value):
+        # NoSqlManager.__setitem__() passes expiretime as an arg to set_value.
+        # This is wrong because its set_value() doesn't take it. Rather than
+        # mess with it, override __setitem__ with a version that doesn't pass
+        # expiretime. We'll use the _CassandraBackedDict's field directly.
+        self.set_value(key, value)
+
+    def _format_key(self, key):
+        return '%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
+
+
+class _CassandraBackedDict(object):
+    """
+    A class with an interface very similar to a dict that NoSqlManager will use.
+    """
+
+    def __init__(self, namespace, url=None, keyspace=None, column_family=None,
+                 **params):
         if not keyspace:
             raise MissingCacheParameter("keyspace is required")
         if re.search(r'[^0-9a-zA-Z_]', keyspace):
@@ -52,8 +93,9 @@ class CassandraCqlManager(NoSqlManager):
                 "table can only have alphanumeric chars and underscore"
             )
         self.__table_cql_safe = table
-        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
-                              lock_dir=lock_dir, **params)
+        expire = params.get('expire', None)
+        self._expiretime = int(expire) if expire else None
+
         cluster = self.__connect_to_cluster(url, params)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
         self.__ensure_table()
@@ -84,7 +126,7 @@ class CassandraCqlManager(NoSqlManager):
         cluster_params['default_retry_policy'] = RetryPolicy()
 
         log.info(
-            "CassandraCqlManager connecting to cluster with params %s",
+            "Connecting to cassandra cluster with params %s",
             cluster_params)
         return Cluster(**cluster_params)
 
@@ -95,11 +137,6 @@ class CassandraCqlManager(NoSqlManager):
             _, _, host_ips = socket.gethostbyname_ex(hostname)
             ips.update(host_ips)
         return list(ips)
-
-    def open_connection(self, host, port, **params):
-        # NoSqlManager calls this but it's not quite the interface I want so
-        # ignore it and implement a different connect method.
-        pass
 
     def __ensure_table(self):
         try:
@@ -153,50 +190,34 @@ class CassandraCqlManager(NoSqlManager):
         '''.format(tbl=self.__table_cql_safe)
         self.__del_stmt = self.__session.prepare(del_query)
 
-    def __contains__(self, key):
-        rows = self.__session.execute(self.__contains_stmt,
-                                      {'key': self.__format_key(key)})
+    def has_key(self, key):
+        # NoSqlManager uses has_key() rather than `in`.
+        rows = self.__session.execute(self.__contains_stmt, {'key': key})
         count = rows[0].count
         assert count == 0 or count == 1
         return count > 0
 
-    def set_value(self, key, value, expiretime=None):
-        key = self.__format_key(key)
-        if self.serializer == 'json':
-            encoded = json.dumps(value, ensure_ascii=True)
-        else:
-            encoded =  pickle.dumps(value, 2)
-        if expiretime:
-            ttl = int(expiretime)
+    def __setitem__(self, key, value):
+        if self._expiretime:
             self.__session.execute(self.__set_expire_stmt,
-                                   {'key': key, 'data': encoded, 'ttl': ttl})
+                                   {'key': key, 'data': value,
+                                    'ttl': self._expiretime})
         else:
             self.__session.execute(self.__set_no_expire_stmt,
-                                   {'key': key, 'data': encoded})
+                                   {'key': key, 'data': value})
 
-    def __getitem__(self, key):
-        key = self.__format_key(key)
+    def get(self, key):
+        # NoSqlManager uses get() rather than [].
         rows = self.__session.execute(self.__get_stmt, [key])
         if len(rows) == 0:
             return None
         assert len(rows) == 1, "get {} returned more than 1 row".format(key)
-        encoded = rows[0].data
-        if self.serializer == 'json':
-            if isinstance(encoded, bytes):
-                return json.loads(encoded.decode('utf-8'))
-            else:
-                return json.loads(encoded)
-        else:
-            return pickle.loads(encoded)
+        return rows[0].data
 
     def __delitem__(self, key):
-        key = self.__format_key(key)
         res = self.__session.execute(self.__del_stmt, [key])
 
-    def __format_key(self, key):
-        return '%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
-
-    def do_remove(self):
+    def clear(self):
         """DELETE EVERYTHING!"""
         self.__session.execute('TRUNCATE ' + self.__table_cql_safe)
 

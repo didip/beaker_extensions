@@ -1,6 +1,8 @@
 import json
 import logging
+import random
 import re
+import socket
 
 from beaker.exceptions import InvalidCacheBackendError, MissingCacheParameter
 
@@ -11,6 +13,7 @@ from beaker_extensions.nosql import pickle
 try:
     import cassandra
     from cassandra.cluster import Cluster
+    from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
 except ImportError:
     raise InvalidCacheBackendError(
         "cassandra_cql backend requires the 'cassandra-driver' library"
@@ -26,7 +29,7 @@ class CassandraCqlManager(NoSqlManager):
 
     Configuration example:
         beaker.session.type = cassandra_cql
-        beaker.session.url = localhost:9160
+        beaker.session.url = cassandra1:9042;cassandra2:9042
         beaker.session.keyspace = Keyspace1
         beaker.session.column_family = beaker
 
@@ -51,12 +54,52 @@ class CassandraCqlManager(NoSqlManager):
         self.__table_cql_safe = table
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
                               lock_dir=lock_dir, **params)
-
-    def open_connection(self, host, port, **params):
-        cluster = Cluster()
+        cluster = self.__connect_to_cluster(url, params)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
         self.__ensure_table()
         self.__prepare_statements()
+
+    def __connect_to_cluster(self, urls, params):
+        cluster_params = {}
+
+        # If the config specifies a hostname which resolves to multiple
+        # hosts (eg dns roundrobin or consul), the driver will have a
+        # shorter timeout than we want since the timeout is applied per item
+        # in 'contact_points'. To avoid this, resolve the the host
+        # explicitly and pass in up to 2 random ones.
+        url_list = [h.strip() for h in urls.split(';')]
+        hosts = [h.split(':', 1)[0] for h in url_list]
+        contact_points = self.__resolve_hostnames(hosts)
+        random.shuffle(contact_points)
+        cluster_params['contact_points'] = contact_points[:2]
+
+        if 'max_schema_agreement_wait' in params:
+            cluster_params['max_schema_agreement_wait'] = \
+                params['max_schema_agreement_wait']
+
+        # Clients should use any details they have to route intelligently
+        if 'datacenter' in params:
+            cluster_params['load_balancing_policy'] = TokenAwarePolicy(
+                DCAwareRoundRobinPolicy(local_dc=params['datacenter']))
+        cluster_params['default_retry_policy'] = RetryPolicy()
+
+        log.info(
+            "CassandraCqlManager connecting to cluster with params %s",
+            cluster_params)
+        return Cluster(**cluster_params)
+
+    def __resolve_hostnames(self, hostnames):
+        """Resolves a list of hostnames into a list of IP addresses using DNS."""
+        ips = set()
+        for hostname in hostnames:
+            _, _, host_ips = socket.gethostbyname_ex(hostname)
+            ips.update(host_ips)
+        return list(ips)
+
+    def open_connection(self, host, port, **params):
+        # NoSqlManager calls this but it's not quite the interface I want so
+        # ignore it and implement a different connect method.
+        pass
 
     def __ensure_table(self):
         try:

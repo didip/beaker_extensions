@@ -72,6 +72,9 @@ class CassandraCqlManager(NoSqlManager):
     def _format_key(self, key):
         return '%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
 
+    def get_creation_lock(self, key):
+        raise NotImplementedError()
+
 
 class _CassandraBackedDict(object):
     """

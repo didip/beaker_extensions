@@ -59,7 +59,7 @@ class CommonMethodMixin(object):
     def test_nonexistant(self):
         try:
             self.cache.get_value('foo')
-            assert False, 'get_value should have raise an exception'
+            assert False, 'get_value should have raised an exception'
         except KeyError:
             pass
         assert 'foo' not in self.cache

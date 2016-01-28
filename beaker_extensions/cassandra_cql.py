@@ -85,7 +85,7 @@ class _CassandraBackedDict(object):
                  **params):
         if not keyspace:
             raise MissingCacheParameter("keyspace is required")
-        if re.search(r'[^0-9a-zA-Z_]', keyspace):
+        if re.search(r'\W', keyspace):
             raise ValueError(
                 "keyspace can only have alphanumeric chars and underscore"
             )

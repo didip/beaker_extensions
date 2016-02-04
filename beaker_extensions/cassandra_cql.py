@@ -48,8 +48,6 @@ class CassandraCqlManager(NoSqlManager):
             '%r' % keyspace,
             '%r' % column_family,
         ] + ['%s:%r' % (k, params[k]) for k in params])
-        log.info("Looking for existing connection with params %s",
-                 connection_key) # TODO remove this before going to prod
         if connection_key in self.connection_pools:
             self.db_conn = self.connection_pools[connection_key]
         else:

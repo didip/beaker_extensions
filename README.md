@@ -13,3 +13,11 @@ beaker.session.url = 127.0.0.1:1978
 
 Thanks to Jack Hsu for providing the tokyo example:
 http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions
+
+## Tests
+
+*Warning: the tests talk to real data stores running on localhost and may overwrite or delete data!*
+
+```
+nosetests
+```

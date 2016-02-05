@@ -57,12 +57,17 @@ class NoSqlManager(NamespaceManager):
     def __getitem__(self, key):
         if self.serializer == 'json':
             payload = self.db_conn.get(self._format_key(key))
+            if payload is None:
+                raise KeyError(key)
             if isinstance(payload, bytes):
                 return json.loads(payload.decode('utf-8'))
             else:
                 return json.loads(payload)
         else:
-            return pickle.loads(self.db_conn.get(self._format_key(key)))
+            payload = self.db_conn.get(self._format_key(key))
+            if payload is None:
+                raise KeyError(key)
+            return pickle.loads(payload)
 
     def __contains__(self, key):
         return self.db_conn.has_key(self._format_key(key))

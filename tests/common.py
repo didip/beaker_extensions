@@ -3,6 +3,7 @@
 import time
 
 from beaker_extensions._compat import u_
+from nose.tools import assert_raises
 
 
 class CommonMethodMixin(object):
@@ -30,6 +31,13 @@ class CommonMethodMixin(object):
         assert 'foo' in self.cache
         assert self.cache.get_value('foo') == 'bar'
         assert self.cache['foo'] == 'bar'
+
+    def test_get_missing(self):
+        assert 'foo' not in self.cache
+        with assert_raises(KeyError):
+            self.cache.get_value('foo')
+        with assert_raises(KeyError):
+            self.cache['foo']
 
     def test_update(self):
         self.cache.set_value('foo', 'bar')

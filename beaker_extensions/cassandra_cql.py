@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 import random
@@ -151,6 +152,7 @@ class _CassandraBackedDict(object):
                 CREATE TABLE {tbl} (
                   key varchar,
                   data blob,
+                  updated_at timestamp,
                   PRIMARY KEY (key)
                 )
             '''.format(tbl=self.__table_cql_safe)
@@ -165,14 +167,14 @@ class _CassandraBackedDict(object):
         self.__contains_stmt = self.__session.prepare(contains_query)
 
         set_expire_query = '''
-            INSERT INTO {tbl} (key, data)
-              VALUES(?, ?)
+            INSERT INTO {tbl} (key, data, updated_at)
+              VALUES(?, ?, ?)
               USING TTL ?
         '''.format(tbl=self.__table_cql_safe)
         self.__set_expire_stmt = self.__session.prepare(set_expire_query)
         set_no_expire_query = '''
-            INSERT INTO {tbl} (key, data)
-              VALUES(?, ?)
+            INSERT INTO {tbl} (key, data, updated_at)
+              VALUES(?, ?, ?)
         '''.format(tbl=self.__table_cql_safe)
         self.__set_no_expire_stmt = self.__session.prepare(set_no_expire_query)
 
@@ -202,10 +204,12 @@ class _CassandraBackedDict(object):
         if self._expiretime:
             self.__session.execute(self.__set_expire_stmt,
                                    {'key': key, 'data': value,
-                                    'ttl': self._expiretime})
+                                    'ttl': self._expiretime,
+                                    'updated_at': datetime.utcnow()})
         else:
             self.__session.execute(self.__set_no_expire_stmt,
-                                   {'key': key, 'data': value})
+                                   {'key': key, 'data': value,
+                                    'updated_at': datetime.utcnow()})
 
     def get(self, key):
         # NoSqlManager uses get() rather than [].

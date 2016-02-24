@@ -118,8 +118,8 @@ class _CassandraBackedDict(object):
         cluster_params['contact_points'] = contact_points[:2]
 
         if 'max_schema_agreement_wait' in params:
-            cluster_params['max_schema_agreement_wait'] = \
-                params['max_schema_agreement_wait']
+            cluster_params['max_schema_agreement_wait'] = int(
+                params['max_schema_agreement_wait'])
 
         # Clients should use any details they have to route intelligently
         if 'datacenter' in params:

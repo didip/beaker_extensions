@@ -213,11 +213,20 @@ class _CassandraBackedDict(object):
 
     def get(self, key):
         # NoSqlManager uses get() rather than [].
-        rows = self.__session.execute(self.__get_stmt, [key])
-        if len(rows) == 0:
+        #
+        # The caller has to make an iterator out of a ResultSet:
+        # https://datastax-oss.atlassian.net/browse/PYTHON-463
+        rows = iter(self.__session.execute(self.__get_stmt, [key]))
+        try:
+            res = rows.next()
+        except StopIteration:
             return None
-        assert len(rows) == 1, "get {} returned more than 1 row".format(key)
-        return rows[0].data
+        try:
+            rows.next()
+            assert False, "get {} found more than 1 row".format(key)
+        except StopIteration:
+            pass
+        return res.data
 
     def __delitem__(self, key):
         res = self.__session.execute(self.__del_stmt, [key])

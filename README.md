@@ -1,18 +1,29 @@
-## Usage
-
-Install directly from git using PIP:
+## Installation
 
 ```
 pip install git+git://github.com/didip/beaker_extensions.git
 ```
 
-Now you can use the redis, tyrant, riak, dynomite, and ringo extensions.
+## Usage
 
+Eg:
+```
 beaker.session.type = tyrant
 beaker.session.url = 127.0.0.1:1978
+```
 
-Thanks to Jack Hsu for providing the tokyo example:
-http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions
+## Development
+
+You can install the library in dev mode for most backends with
+```
+pip install -e .
+```
+You'll have to install the underlying libraries for the backends yourself.
+
+The cassandra_cql backend lists its dependency as an `extras_require` so to pull that in use
+```
+pip install -e .[cassandra_cql]
+```
 
 ## Tests
 
@@ -21,3 +32,8 @@ http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions
 ```
 nosetests
 ```
+
+## Credits
+
+Thanks to Jack Hsu for providing the tokyo example:
+http://www.jackhsu.com/2009/05/27/pylons-with-tokyo-cabinet-beaker-sessions

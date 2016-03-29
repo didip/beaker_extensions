@@ -1,3 +1,7 @@
+# 0.2.0+dd.8
+
+The cassandra_cql backend is upgraded for, and requires, cassandra-driver >= 3.1.0.
+
 # 0.2.0+dd.7
 
 The cassandra_cql backend now handles its max_schema_agreement_wait config option properly. Previously it would pass it as a str to the cassandra driver which wouldn't like that one bit.

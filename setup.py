@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2.0+dd.7'
+version = '0.2.0+dd.8'
 
 TESTS_REQUIRE = ['nose']
 
@@ -23,6 +23,7 @@ setup(name='beaker_extensions',
           # -*- Extra requirements: -*-
       ],
       extras_require={
+          'cassandra_cql': ['cassandra-driver>=3.1.0'],  # 3.1.0 added result iterators
           'testsuite': [TESTS_REQUIRE]
       },
       test_suite='nose.collector',

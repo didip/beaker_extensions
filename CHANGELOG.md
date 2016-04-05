@@ -1,3 +1,7 @@
+# 0.2.0+dd.9
+
+The cassandra_cql backend will handle the newer error message when checking if the table exists and it doesn't.
+
 # 0.2.0+dd.8
 
 The cassandra_cql backend is upgraded for, and requires, cassandra-driver >= 3.1.0.

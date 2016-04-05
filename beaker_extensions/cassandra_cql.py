@@ -145,7 +145,8 @@ class _CassandraBackedDict(object):
             self.__session.execute('SELECT * FROM %s LIMIT 1' %
                                    self.__table_cql_safe)
         except cassandra.InvalidRequest, error:
-            if 'unconfigured columnfamily' not in error.message:
+            if not ('unconfigured columnfamily' in error.message or
+                    'unconfigured table' in error.message):
                 raise
             log.info("Creating new %s ColumnFamily.", self.__table_cql_safe)
             query = '''

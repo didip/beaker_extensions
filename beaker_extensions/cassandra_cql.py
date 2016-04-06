@@ -143,10 +143,9 @@ class _CassandraBackedDict(object):
     def __ensure_table(self):
         query = '''
             CREATE TABLE IF NOT EXISTS {tbl} (
-              key varchar,
+              key varchar PRIMARY KEY,
               data blob,
-              updated_at timestamp,
-              PRIMARY KEY (key)
+              updated_at timestamp
             )
         '''.format(tbl=self.__table_cql_safe)
         self.__session.execute(query)

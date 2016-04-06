@@ -141,22 +141,14 @@ class _CassandraBackedDict(object):
         return list(ips)
 
     def __ensure_table(self):
-        try:
-            self.__session.execute('SELECT * FROM %s LIMIT 1' %
-                                   self.__table_cql_safe)
-        except cassandra.InvalidRequest, error:
-            if 'unconfigured columnfamily' not in error.message:
-                raise
-            log.info("Creating new %s ColumnFamily.", self.__table_cql_safe)
-            query = '''
-                CREATE TABLE {tbl} (
-                  key varchar,
-                  data blob,
-                  updated_at timestamp,
-                  PRIMARY KEY (key)
-                )
-            '''.format(tbl=self.__table_cql_safe)
-            self.__session.execute(query)
+        query = '''
+            CREATE TABLE IF NOT EXISTS {tbl} (
+              key varchar PRIMARY KEY,
+              data blob,
+              updated_at timestamp
+            )
+        '''.format(tbl=self.__table_cql_safe)
+        self.__session.execute(query)
 
     def __prepare_statements(self):
         contains_query = '''

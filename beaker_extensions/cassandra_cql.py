@@ -13,6 +13,7 @@ from beaker_extensions.nosql import pickle
 
 try:
     import cassandra
+    from cassandra import ConsistencyLevel
     from cassandra.cluster import Cluster
     from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
 except ImportError:
@@ -157,6 +158,7 @@ class _CassandraBackedDict(object):
               WHERE key=?
         '''.format(tbl=self.__table_cql_safe)
         self.__contains_stmt = self.__session.prepare(contains_query)
+        self.__contains_stmt.consistency_level = ConsistencyLevel.QUORUM
 
         set_expire_query = '''
             INSERT INTO {tbl} (key, data, updated_at)
@@ -164,11 +166,13 @@ class _CassandraBackedDict(object):
               USING TTL ?
         '''.format(tbl=self.__table_cql_safe)
         self.__set_expire_stmt = self.__session.prepare(set_expire_query)
+        self.__set_expire_stmt.consistency_level = ConsistencyLevel.QUORUM
         set_no_expire_query = '''
             INSERT INTO {tbl} (key, data, updated_at)
               VALUES(?, ?, ?)
         '''.format(tbl=self.__table_cql_safe)
         self.__set_no_expire_stmt = self.__session.prepare(set_no_expire_query)
+        self.__set_no_expire_stmt.consistency_level = ConsistencyLevel.QUORUM
 
         get_query = '''
             SELECT data
@@ -177,6 +181,7 @@ class _CassandraBackedDict(object):
               LIMIT 2
         '''.format(tbl=self.__table_cql_safe)
         self.__get_stmt = self.__session.prepare(get_query)
+        self.__get_stmt.consistency_level = ConsistencyLevel.QUORUM
 
         del_query = '''
             DELETE
@@ -184,6 +189,7 @@ class _CassandraBackedDict(object):
               WHERE key=?
         '''.format(tbl=self.__table_cql_safe)
         self.__del_stmt = self.__session.prepare(del_query)
+        self.__del_stmt.consistency_level = ConsistencyLevel.QUORUM
 
     def has_key(self, key):
         # NoSqlManager uses has_key() rather than `in`.

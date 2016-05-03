@@ -2,6 +2,8 @@
 
 The expire option now works with the cassandra_cql backend.
 
+The cassandra_cql backend no longer uses the explicit `updated_at` column and won't create it anymore when creating a table. If you want to query on rows in this way, you can use cql's row timestamp mechanism.
+
 # 0.2.0+dd.10
 
 The cassandra_cql backend uses quorum consistency level for reads and writes.

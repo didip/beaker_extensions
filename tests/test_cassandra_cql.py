@@ -1,3 +1,4 @@
+from time import sleep
 import unittest
 
 from nose.plugins.attrib import attr
@@ -5,6 +6,7 @@ from nose.tools import nottest
 
 from beaker.cache import Cache
 
+from beaker_extensions.cassandra_cql import CassandraCqlManager
 from common import CommonMethodMixin
 
 
@@ -54,6 +56,7 @@ class CassandraCqlPickleSetup(object):
                            url='localhost:9042', keyspace=self.__keyspace,
                            column_family=self.__table, serializer='pickle')
         self.cache.clear()
+
 
 class CassandraCqlJsonSetup(object):
     __keyspace = 'test_ks'
@@ -115,3 +118,29 @@ class TestCassandraCqlJson(CassandraCqlJsonSetup, CassandraCqlSetup,
         # We can't store objects with the json serializer so skip this test from
         # the CommonMethodMixin.
         pass
+
+
+@attr('cassandra_cql')
+class TestCassandraCqlExpire(CassandraCqlSetup, unittest.TestCase):
+    __keyspace = 'test_ks'
+    __table = 'test_table'
+
+    def setUp(self):
+        # Override NotImplemented version from CassandraCqlSetup
+        pass
+
+    def test_expire_ctor_arg(self):
+        # In most of our tests we instantiate a CassandraCqlManager via Cache.
+        # It seems though that this handles expire params differently than how
+        # Session does: it implements expire in get() instead of passing it to
+        # CassandraCqlManager's constructor. So we'll explicitly create a
+        # CassandraCqlManager here to pass in expire.
+        cm = CassandraCqlManager('testns',
+                      url='localhost:9042', keyspace=self.__keyspace,
+                      column_family=self.__table, serializer='json',
+                      expire=1)
+        cm.do_remove() # clears namespace
+        cm.set_value('foo', 'bar')
+        assert cm.has_key('foo')
+        sleep(1) # Slow test :-(
+        assert not cm.has_key('foo')

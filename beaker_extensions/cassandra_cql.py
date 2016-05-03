@@ -202,8 +202,8 @@ class _CassandraBackedDict(object):
         if self._expiretime:
             self.__session.execute(self.__set_expire_stmt,
                                    {'key': key, 'data': value,
-                                    'ttl': self._expiretime,
-                                    'updated_at': datetime.utcnow()})
+                                    'updated_at': datetime.utcnow(),
+                                    '[ttl]': self._expiretime})
         else:
             self.__session.execute(self.__set_no_expire_stmt,
                                    {'key': key, 'data': value,

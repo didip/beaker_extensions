@@ -145,8 +145,7 @@ class _CassandraBackedDict(object):
         query = '''
             CREATE TABLE IF NOT EXISTS {tbl} (
               key varchar PRIMARY KEY,
-              data blob,
-              updated_at timestamp
+              data blob
             )
         '''.format(tbl=self.__table_cql_safe)
         self.__session.execute(query)
@@ -161,15 +160,15 @@ class _CassandraBackedDict(object):
         self.__contains_stmt.consistency_level = ConsistencyLevel.QUORUM
 
         set_expire_query = '''
-            INSERT INTO {tbl} (key, data, updated_at)
-              VALUES(?, ?, ?)
+            INSERT INTO {tbl} (key, data)
+              VALUES(?, ?)
               USING TTL ?
         '''.format(tbl=self.__table_cql_safe)
         self.__set_expire_stmt = self.__session.prepare(set_expire_query)
         self.__set_expire_stmt.consistency_level = ConsistencyLevel.QUORUM
         set_no_expire_query = '''
-            INSERT INTO {tbl} (key, data, updated_at)
-              VALUES(?, ?, ?)
+            INSERT INTO {tbl} (key, data)
+              VALUES(?, ?)
         '''.format(tbl=self.__table_cql_safe)
         self.__set_no_expire_stmt = self.__session.prepare(set_no_expire_query)
         self.__set_no_expire_stmt.consistency_level = ConsistencyLevel.QUORUM
@@ -202,12 +201,10 @@ class _CassandraBackedDict(object):
         if self._expiretime:
             self.__session.execute(self.__set_expire_stmt,
                                    {'key': key, 'data': value,
-                                    'ttl': self._expiretime,
-                                    'updated_at': datetime.utcnow()})
+                                    '[ttl]': self._expiretime})
         else:
             self.__session.execute(self.__set_no_expire_stmt,
-                                   {'key': key, 'data': value,
-                                    'updated_at': datetime.utcnow()})
+                                   {'key': key, 'data': value})
 
     def get(self, key):
         # NoSqlManager uses get() rather than [].

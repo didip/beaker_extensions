@@ -1,3 +1,7 @@
+# 0.2.0+dd.11
+
+The expire option now works with the cassandra_cql backend.
+
 # 0.2.0+dd.10
 
 The cassandra_cql backend uses quorum consistency level for reads and writes.

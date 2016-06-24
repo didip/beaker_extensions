@@ -127,6 +127,10 @@ class _CassandraBackedDict(object):
                 DCAwareRoundRobinPolicy(local_dc=params['datacenter']))
         cluster_params['default_retry_policy'] = RetryPolicy()
 
+        cluster_params['sockopts'] = [
+            (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        ]
+
         log.info(
             "Connecting to cassandra cluster with params %s",
             cluster_params)

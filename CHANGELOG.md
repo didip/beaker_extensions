@@ -1,3 +1,9 @@
+# 0.2.0+dd.14
+
+The cassandra_cql backend no longer uses socket.TCP_NODELAY and allows a configurable query timeout.
+
+All backends that use the NoSqlManager have a new `tries` setting which will retry operations on failure.
+
 # 0.2.0+dd.13
 
 The cassandra_cql backend uses socket.TCP_NODELAY.

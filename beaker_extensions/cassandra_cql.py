@@ -14,7 +14,9 @@ from beaker_extensions.nosql import pickle
 try:
     import cassandra
     from cassandra.cluster import Cluster
-    from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
+    from cassandra.policies import (
+        TokenAwarePolicy, DCAwareRoundRobinPolicy, FallthroughRetryPolicy
+    )
 except ImportError:
     raise InvalidCacheBackendError(
         "cassandra_cql backend requires the 'cassandra-driver' library"
@@ -33,6 +35,7 @@ class CassandraCqlManager(NoSqlManager):
         beaker.session.url = cassandra1:9042;cassandra2:9042
         beaker.session.keyspace = Keyspace1
         beaker.session.column_family = beaker
+        beaker.session.query_timeout = 3 # seconds
 
     The default column_family is 'beaker'.
     If it doesn't exist under given keyspace, it is created automatically.
@@ -102,6 +105,8 @@ class _CassandraBackedDict(object):
         self.__session = cluster.connect(self.__keyspace_cql_safe)
         self.__ensure_table()
         self.__prepare_statements()
+        # This 10s default matches the driver's default.
+        self.__session.default_timeout = int(params.get('query_timeout', 10))
 
     def __connect_to_cluster(self, urls, params):
         cluster_params = {}
@@ -125,15 +130,13 @@ class _CassandraBackedDict(object):
         if 'datacenter' in params:
             cluster_params['load_balancing_policy'] = TokenAwarePolicy(
                 DCAwareRoundRobinPolicy(local_dc=params['datacenter']))
-        cluster_params['default_retry_policy'] = RetryPolicy()
 
-        cluster_params['sockopts'] = [
-            (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        ]
+        # Don't retry here; we do it at the NoSqlManager level.
+        cluster_params['default_retry_policy'] = FallthroughRetryPolicy()
 
         log.info(
-            "Connecting to cassandra cluster with params %s",
-            cluster_params)
+            "Connecting to cassandra cluster with params %s", cluster_params
+        )
         return Cluster(**cluster_params)
 
     def __resolve_hostnames(self, hostnames):

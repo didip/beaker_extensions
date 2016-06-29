@@ -5,6 +5,7 @@ from beaker.container import NamespaceManager, Container
 from beaker.synchronization import file_synchronizer
 from beaker.util import verify_directory
 from beaker.exceptions import MissingCacheParameter
+from retry.api import retry_call
 
 try:
     import cPickle as pickle
@@ -41,6 +42,8 @@ class NoSqlManager(NamespaceManager):
 
         host, port = url.split(':', 1)
 
+        self._tries = int(params.pop('tries', 1))
+
         self.open_connection(host, int(port), **conn_params)
 
     def open_connection(self, host, port):
@@ -54,6 +57,13 @@ class NoSqlManager(NamespaceManager):
     def _format_key(self, key):
         return self.namespace + '_'
 
+    def _retry(func):
+        """A little wrapper around the retry lib to pass our settings."""
+        def retry_wrapper(self, *args, **kwargs):
+            return retry_call(func, args, kwargs, tries=self._tries, logger=log)
+        return retry_wrapper
+
+    @_retry
     def __getitem__(self, key):
         if self.serializer == 'json':
             payload = self.db_conn.get(self._format_key(key))
@@ -69,12 +79,14 @@ class NoSqlManager(NamespaceManager):
                 raise KeyError(key)
             return pickle.loads(payload)
 
+    @_retry
     def __contains__(self, key):
         return self.db_conn.has_key(self._format_key(key))
 
     def has_key(self, key):
         return key in self
 
+    @_retry
     def set_value(self, key, value):
         if self.serializer == 'json':
             self.db_conn[self._format_key(key)] = json.dumps(value, ensure_ascii=True)
@@ -84,12 +96,15 @@ class NoSqlManager(NamespaceManager):
     def __setitem__(self, key, value):
         self.set_value(key, value, self._expiretime)
 
+    @_retry
     def __delitem__(self, key):
         del self.db_conn[self._format_key(key)]
 
+    @_retry
     def do_remove(self):
         self.db_conn.clear()
 
+    @_retry
     def keys(self):
         return self.db_conn.keys()
 

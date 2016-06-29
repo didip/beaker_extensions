@@ -1,4 +1,6 @@
-# 0.2.0+dd.14
+# 0.2.0+dd.15
+
+(dd.14 was a broken release)
 
 The cassandra_cql backend no longer uses socket.TCP_NODELAY and allows a configurable query timeout.
 

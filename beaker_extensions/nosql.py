@@ -59,8 +59,11 @@ class NoSqlManager(NamespaceManager):
 
     def _retry(func):
         """A little wrapper around the retry lib to pass our settings."""
-        def retry_wrapper(self, *args, **kwargs):
-            return retry_call(func, args, kwargs, tries=self._tries, logger=log)
+        def retry_wrapper(*args, **kwargs):
+            self = args[0]
+            return retry_call(
+                func, args, kwargs, tries=self._tries, logger=log
+            )
         return retry_wrapper
 
     @_retry

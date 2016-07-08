@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import wraps
 import json
 import logging
 import random
@@ -15,7 +16,7 @@ try:
     import cassandra
     from cassandra.cluster import Cluster
     from cassandra.policies import (
-        TokenAwarePolicy, DCAwareRoundRobinPolicy, FallthroughRetryPolicy
+        TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
     )
 except ImportError:
     raise InvalidCacheBackendError(
@@ -83,6 +84,10 @@ class _CassandraBackedDict(object):
     A class with an interface very similar to a dict that NoSqlManager will use.
     """
 
+    _RETRYABLE_EXCEPTIONS = (
+        cassandra.DriverException, cassandra.RequestExecutionException
+    )
+
     def __init__(self, namespace, url=None, keyspace=None, column_family=None,
                  **params):
         if not keyspace:
@@ -100,6 +105,8 @@ class _CassandraBackedDict(object):
         self.__table_cql_safe = table
         expire = params.get('expire', None)
         self._expiretime = int(expire) if expire else None
+
+        self._tries = int(params.pop('tries', 1))
 
         cluster = self.__connect_to_cluster(url, params)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
@@ -131,8 +138,12 @@ class _CassandraBackedDict(object):
             cluster_params['load_balancing_policy'] = TokenAwarePolicy(
                 DCAwareRoundRobinPolicy(local_dc=params['datacenter']))
 
-        # Don't retry here; we do it at the NoSqlManager level.
-        cluster_params['default_retry_policy'] = FallthroughRetryPolicy()
+        # We have _CassandraBackedDict-level retrying but I don't know if
+        # that'll go to the next host so I want to try stacking it with a driver
+        # retry policy that does. We don't want to use _only_ this because this
+        # is only for timeouts from the cassandra coordinator's perspective,
+        # and wouldn't retry if there was a failure reaching cassadra at all.
+        cluster_params['default_retry_policy'] = _NextHostRetryPolicy()
 
         log.info(
             "Connecting to cassandra cluster with params %s", cluster_params
@@ -191,6 +202,24 @@ class _CassandraBackedDict(object):
         '''.format(tbl=self.__table_cql_safe)
         self.__del_stmt = self.__session.prepare(del_query)
 
+    def _retry(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            _tries = self._tries
+            while _tries:
+                try:
+                    return func(*args, **kwargs)
+                except self._RETRYABLE_EXCEPTIONS:
+                    _tries -= 1
+                    if not _tries:
+                        raise
+                    t = self._tries - _tries
+                    log.warning('Caught retryable exception on try=%d (stack '
+                                'trace below). Retrying.', t, exc_info=True)
+        return wrapper
+
+    @_retry
     def has_key(self, key):
         # NoSqlManager uses has_key() rather than `in`.
         rows = self.__session.execute(self.__contains_stmt, {'key': key})
@@ -198,6 +227,7 @@ class _CassandraBackedDict(object):
         assert count == 0 or count == 1
         return count > 0
 
+    @_retry
     def __setitem__(self, key, value):
         if self._expiretime:
             self.__session.execute(self.__set_expire_stmt,
@@ -207,6 +237,7 @@ class _CassandraBackedDict(object):
             self.__session.execute(self.__set_no_expire_stmt,
                                    {'key': key, 'data': value})
 
+    @_retry
     def get(self, key):
         # NoSqlManager uses get() rather than [].
         #
@@ -224,6 +255,7 @@ class _CassandraBackedDict(object):
             pass
         return res.data
 
+    @_retry
     def __delitem__(self, key):
         res = self.__session.execute(self.__del_stmt, [key])
 
@@ -237,6 +269,29 @@ class _CassandraBackedDict(object):
             "keys, not the keys used by the rest of this class' api. "
             "Regardless, it doesn't seem to be used so I'm not implementing it."
         )
+
+
+class _NextHostRetryPolicy(RetryPolicy):
+    def on_read_timeout(self, query, consistency, required_responses,
+                        received_responses, data_retrieved, retry_num):
+        if retry_num == 0:
+            return self.RETRY_NEXT_HOST, None
+        else:
+            return self.RETHROW, None
+
+    def on_write_timeout(self, query, consistency, write_type,
+                         required_responses, received_responses, retry_num):
+        if retry_num == 0:
+            return self.RETRY_NEXT_HOST, None
+        else:
+            return self.RETHROW, None
+
+    def on_unavailable(self, query, consistency, required_replicas,
+                       alive_replicas, retry_num):
+        if retry_num == 0:
+            return self.RETRY_NEXT_HOST, None
+        else:
+            return self.RETHROW, None
 
 
 class CassandraCqlContainer(Container):

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2.0+dd.15'
+version = '0.2.0+dd.16'
 
 TESTS_REQUIRE = ['nose']
 
@@ -19,9 +19,7 @@ setup(name='beaker_extensions',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=[
-          'retry'
-      ],
+      install_requires=[],
       extras_require={
           'cassandra_cql': ['cassandra-driver>=3.1.0'],  # 3.1.0 added result iterators
           'testsuite': [TESTS_REQUIRE]

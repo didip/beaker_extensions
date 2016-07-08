@@ -1,3 +1,13 @@
+# 0.2.0+dd.16
+
+Fix cassandra_cql missing value handling.
+
+Move retry support into only the cassandra_cql backend; it needs to only catch exceptions specific to the backend.
+
+Remove dependency on retry lib.
+
+Add a cassandra_cql retry policy to try another host.
+
 # 0.2.0+dd.15
 
 (dd.14 was a broken release)

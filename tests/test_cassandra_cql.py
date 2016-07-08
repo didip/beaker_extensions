@@ -5,8 +5,11 @@ from nose.plugins.attrib import attr
 from nose.tools import nottest
 
 from beaker.cache import Cache
+import cassandra
 
-from beaker_extensions.cassandra_cql import CassandraCqlManager
+from beaker_extensions.cassandra_cql import (
+    CassandraCqlManager, _CassandraBackedDict
+)
 from common import CommonMethodMixin
 
 
@@ -144,3 +147,63 @@ class TestCassandraCqlExpire(CassandraCqlSetup, unittest.TestCase):
         assert cm.has_key('foo')
         sleep(1) # Slow test :-(
         assert not cm.has_key('foo')
+
+
+@attr('cassandra_cql')
+class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
+    __keyspace = 'test_ks'
+    __table = 'test_table'
+
+    def setUp(self):
+        # Override NotImplemented version from CassandraCqlSetup
+        pass
+
+    def test_doesnt_retry_on_success(self):
+        class DummySession(object):
+            def __init__(self):
+                self.calls = 0
+            def execute(self, *args, **kwargs):
+                self.calls += 1
+
+        c = _CassandraBackedDict('testns',
+                      url='localhost:9042', keyspace=self.__keyspace,
+                      column_family=self.__table, expire=1, tries=3)
+        s = DummySession()
+        c._CassandraBackedDict__session = s  # sad face
+        c['k'] = 'v'
+        assert s.calls == 1
+
+
+    def test_succeeds_after_retrying(self):
+        class DummySession(object):
+            def __init__(self):
+                self.calls = 0
+            def execute(self, *args, **kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    raise cassandra.DriverException()
+
+        c = _CassandraBackedDict('testns',
+                      url='localhost:9042', keyspace=self.__keyspace,
+                      column_family=self.__table, expire=1, tries=3)
+        s = DummySession()
+        c._CassandraBackedDict__session = s  # sad face
+        c['k'] = 'v'
+        assert s.calls == 2
+
+    def test_raises_after_retrying(self):
+        class DummySession(object):
+            def __init__(self):
+                self.calls = 0
+            def execute(self, *args, **kwargs):
+                self.calls += 1
+                raise cassandra.DriverException()
+
+        c = _CassandraBackedDict('testns',
+                      url='localhost:9042', keyspace=self.__keyspace,
+                      column_family=self.__table, expire=1, tries=3)
+        s = DummySession()
+        c._CassandraBackedDict__session = s  # sad face
+        with self.assertRaises(cassandra.DriverException):
+            c['k'] = 'v'
+        assert s.calls == 3

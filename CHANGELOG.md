@@ -1,3 +1,7 @@
+# 0.2.0+dd.17
+
+Add an option to `CassandraCqlManager` to trace queries with [ddtrace](https://github.com/Datadog/dd-trace-py)
+
 # 0.2.0+dd.16
 
 Fix cassandra_cql missing value handling.

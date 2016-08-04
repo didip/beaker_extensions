@@ -111,7 +111,6 @@ class _CassandraBackedDict(object):
 
         self._tries = int(params.pop('tries', 1))
 
-        # Use a ddtrace-d connection if instructed to
         cluster = self.__connect_to_cluster(url, params, ddtrace=ddtrace)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
         self.__ensure_table()

@@ -12,6 +12,9 @@ from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
 
+from ddtrace import tracer
+from ddtrace.contrib.cassandra import get_traced_cassandra
+
 try:
     import cassandra
     from cassandra.cluster import Cluster
@@ -45,7 +48,7 @@ class CassandraCqlManager(NoSqlManager):
     connection_pools = {}
 
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None,
-                 keyspace=None, column_family=None, **params):
+                 keyspace=None, column_family=None, ddtrace=False, **params):
         NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir,
                               lock_dir=lock_dir, **params)
         connection_key = '-'.join([
@@ -57,7 +60,7 @@ class CassandraCqlManager(NoSqlManager):
             self.db_conn = self.connection_pools[connection_key]
         else:
             self.db_conn = _CassandraBackedDict(namespace, url, keyspace,
-                                                column_family, **params)
+                                                column_family, ddtrace, **params)
             self.connection_pools[connection_key] = self.db_conn
 
     def open_connection(self, host, port, **params):
@@ -88,7 +91,7 @@ class _CassandraBackedDict(object):
         cassandra.DriverException, cassandra.RequestExecutionException
     )
 
-    def __init__(self, namespace, url=None, keyspace=None, column_family=None,
+    def __init__(self, namespace, url=None, keyspace=None, column_family=None, ddtrace=False,
                  **params):
         if not keyspace:
             raise MissingCacheParameter("keyspace is required")
@@ -108,14 +111,14 @@ class _CassandraBackedDict(object):
 
         self._tries = int(params.pop('tries', 1))
 
-        cluster = self.__connect_to_cluster(url, params)
+        cluster = self.__connect_to_cluster(url, params, ddtrace=ddtrace)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
         self.__ensure_table()
         self.__prepare_statements()
         # This 10s default matches the driver's default.
         self.__session.default_timeout = int(params.get('query_timeout', 10))
 
-    def __connect_to_cluster(self, urls, params):
+    def __connect_to_cluster(self, urls, params, ddtrace=False):
         cluster_params = {}
 
         # If the config specifies a hostname which resolves to multiple
@@ -148,7 +151,11 @@ class _CassandraBackedDict(object):
         log.info(
             "Connecting to cassandra cluster with params %s", cluster_params
         )
-        return Cluster(**cluster_params)
+
+        if ddtrace:
+            return get_traced_cassandra(tracer, service="beaker")(**cluster_params)
+        else:
+            return Cluster(**cluster_params)
 
     def __resolve_hostnames(self, hostnames):
         """Resolves a list of hostnames into a list of IP addresses using DNS."""

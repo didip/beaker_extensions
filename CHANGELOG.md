@@ -1,3 +1,7 @@
+# 0.2.0+dd.18
+
+Remove the `ddtrace` option from `CassandraCqlManager` (deprecated in favor of `ddtrace` monkey patching).
+
 # 0.2.0+dd.17
 
 Add an option to `CassandraCqlManager` to trace queries with [ddtrace](https://github.com/Datadog/dd-trace-py)

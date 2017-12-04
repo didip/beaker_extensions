@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2.0+dd.18'
+version = '0.2.0+ddbeta.19'
 
 TESTS_REQUIRE = ['nose']
 

@@ -174,6 +174,7 @@ class _CassandraBackedDict(object):
               WHERE key=?
         '''.format(tbl=self.__table_cql_safe)
         self.__contains_stmt = self.__session.prepare(contains_query)
+        self.__contains_stmt.consistency_level = cassandra.ConsistencyLevel.QUORUM
 
         set_expire_query = '''
             INSERT INTO {tbl} (key, data)
@@ -181,11 +182,14 @@ class _CassandraBackedDict(object):
               USING TTL ?
         '''.format(tbl=self.__table_cql_safe)
         self.__set_expire_stmt = self.__session.prepare(set_expire_query)
+        self.__set_expire_stmt.consistency_level = cassandra.ConsistencyLevel.QUORUM
+
         set_no_expire_query = '''
             INSERT INTO {tbl} (key, data)
               VALUES(?, ?)
         '''.format(tbl=self.__table_cql_safe)
         self.__set_no_expire_stmt = self.__session.prepare(set_no_expire_query)
+        self.__set_no_expire_stmt.consistency_level = cassandra.ConsistencyLevel.QUORUM
 
         get_query = '''
             SELECT data
@@ -194,6 +198,7 @@ class _CassandraBackedDict(object):
               LIMIT 2
         '''.format(tbl=self.__table_cql_safe)
         self.__get_stmt = self.__session.prepare(get_query)
+        self.__get_stmt.consistency_level = cassandra.ConsistencyLevel.QUORUM
 
         del_query = '''
             DELETE
@@ -201,6 +206,7 @@ class _CassandraBackedDict(object):
               WHERE key=?
         '''.format(tbl=self.__table_cql_safe)
         self.__del_stmt = self.__session.prepare(del_query)
+        self.__del_stmt.consistency_level = cassandra.ConsistencyLevel.QUORUM
 
     def _retry(func):
         @wraps(func)

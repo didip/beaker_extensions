@@ -110,6 +110,12 @@ class _CassandraBackedDict(object):
 
         cluster = self.__connect_to_cluster(url, params)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
+        consistency_level = getattr(cassandra.ConsistencyLevel
+                                    params.get('consistency_level'),
+                                    None)
+        if consistency_level:
+            self.__session.default_consistency_level = consistency_level
+
         self.__ensure_table()
         self.__prepare_statements()
         # This 10s default matches the driver's default.
@@ -181,6 +187,7 @@ class _CassandraBackedDict(object):
               USING TTL ?
         '''.format(tbl=self.__table_cql_safe)
         self.__set_expire_stmt = self.__session.prepare(set_expire_query)
+
         set_no_expire_query = '''
             INSERT INTO {tbl} (key, data)
               VALUES(?, ?)

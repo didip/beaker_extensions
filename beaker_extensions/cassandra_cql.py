@@ -110,11 +110,18 @@ class _CassandraBackedDict(object):
 
         cluster = self.__connect_to_cluster(url, params)
         self.__session = cluster.connect(self.__keyspace_cql_safe)
-        consistency_level = getattr(cassandra.ConsistencyLevel,
-                                    params.get('consistency_level'),
-                                    None)
-        if consistency_level:
-            self.__session.default_consistency_level = consistency_level
+
+        consistency_level_param = params.get('consistency_level')
+        try:
+            basestring
+        except NameError:
+            basestring = str
+        if isinstance(consistency_level_param, basestring):
+            consistency_level = getattr(cassandra.ConsistencyLevel,
+                                        consistency_level_param.upper(),
+                                        None)
+            if consistency_level:
+                self.__session.default_consistency_level = consistency_level
 
         self.__ensure_table()
         self.__prepare_statements()

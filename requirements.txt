@@ -1,0 +1,5 @@
+nose
+git+https://github.com/DataDog/beaker@1.9.0+dd.20#egg=beaker==1.9.0+dd.20
+cassandra_cql
+cassandra-driver
+redis

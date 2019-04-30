@@ -1,3 +1,24 @@
+# New Hotness
+
+ virtualenv ./venv && source ./venv/bin/activate
+ pip install -r requirements.txt
+
+ docker pull redis
+ docker run -p 6379:6379 redis
+
+ docker pull cassandra:3.0.17
+ docker run -p 9042:9042 cassandra:3.0.17
+
+
+## TODO
+
+
+
+ - cassandra prod is 3.0.17
+ - redis is sort of irrelevant so we run latest
+
+# Old and Busted 
+
 ## Installation
 
 ```

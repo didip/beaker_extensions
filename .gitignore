@@ -4,3 +4,5 @@ build
 *.swp
 build/
 dist/
+venv/
+.tags

@@ -75,11 +75,14 @@ class NoSqlManager(NamespaceManager):
     def has_key(self, key):
         return key in self
 
-    def set_value(self, key, value):
+    def set_value(self, key, value, expiretime=None):
+        """
+        expiretime is not used but necessary for beaker/container.py compatibility
+        """
         if self.serializer == 'json':
             self.db_conn[self._format_key(key)] = json.dumps(value, ensure_ascii=True)
         else:
-            self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
+            self.db_conn[self._format_key(key)] = pickle.dumps(value, 2)
 
     def __setitem__(self, key, value):
         self.set_value(key, value, self._expiretime)

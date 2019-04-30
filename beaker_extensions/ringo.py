@@ -12,12 +12,15 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+
 class RingoManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
+        NoSqlManager.__init__(
+            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
+        )
 
     def open_connection(self, host, port):
-        self.domain = 'default'
+        self.domain = "default"
         self.db_conn = Ringo("%s:%s" % (host, port))
 
     def __contains__(self, key):

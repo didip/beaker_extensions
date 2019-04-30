@@ -6,12 +6,11 @@ from beaker_extensions.nosql import NoSqlManager
 
 try:
     from dynomite import Dynomite
-    from dynomite.ttypes import *
+    from dynomite.ttypes import transport, protocol
 except ImportError:
     raise InvalidCacheBackendError("Dynomite cache backend requires the 'dynomite' library")
 
 try:
-    from thrift import Thrift
     from thrift.transport import TSocket
     from thrift.transport import TTransport
     from thrift.protocol import TBinaryProtocol

@@ -66,8 +66,8 @@ class CassandraManager(NoSqlManager):
         return "%s:%s" % (self.namespace, key.replace(" ", "\302\267"))
 
     def do_remove(self):
-        for key, empty in cf.get_range(column_count=0, filter_empty=False):
-            cf.remove(key)
+        for key, empty in self.cf.get_range(column_count=0, filter_empty=False):
+            self.cf.remove(key)
 
     def keys(self):
         return list(key for key, empty in self.cf.get_range(column_count=0, filter_empty=False))

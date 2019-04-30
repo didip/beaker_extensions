@@ -1,6 +1,4 @@
-from datetime import datetime
 from functools import wraps
-import json
 import logging
 import random
 import re
@@ -10,7 +8,6 @@ from beaker.exceptions import InvalidCacheBackendError, MissingCacheParameter
 
 from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
-from beaker_extensions.nosql import pickle
 
 try:
     import cassandra
@@ -262,7 +259,7 @@ class _CassandraBackedDict(object):
 
     @_retry
     def __delitem__(self, key):
-        res = self.__session.execute(self.__del_stmt, [key])
+        self.__session.execute(self.__del_stmt, [key])
 
     def clear(self):
         """DELETE EVERYTHING!"""

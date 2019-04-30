@@ -8,7 +8,7 @@ from beaker.exceptions import MissingCacheParameter
 
 try:
     import cPickle as pickle
-except:
+except Exception:
     import pickle
 
 log = logging.getLogger(__name__)

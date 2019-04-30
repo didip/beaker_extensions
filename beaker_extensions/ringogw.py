@@ -1,4 +1,8 @@
-import cjson, pycurl, cStringIO, time, re
+import cjson
+import pycurl
+import cStringIO
+import time
+import re
 
 multi_head_re = re.compile("(\d+) (.*?) ")
 
@@ -27,13 +31,15 @@ class DecodeJson:
 
     def output(self):
         return cjson.decode(self.buf.getvalue())
-        self.host = host
 
 
 class DecodeMulti:
     def __init__(self, cb=None):
         if not cb:
-            cb = lambda e, out: out.append(e)
+
+            def cb(e, out):
+                out.append(e)
+
         self.cb = cb
         self.buf = ""
         self.ret = "ok"
@@ -44,21 +50,21 @@ class DecodeMulti:
         self.buf += data
         while True:
             # State 1: Read header, if available
-            if self.entrylen == None:
+            if self.entrylen is None:
                 m = multi_head_re.match(self.buf)
                 if m:
                     sze, ret = m.groups()
                     self.entrylen = int(sze)
                     if ret != "ok":
                         self.ret = ret
-                    self.buf = self.buf[m.end() :]
+                    self.buf = self.buf[m.end():]
                 else:
                     # Wait for more data
                     break
             # State 2: Read body, if available
             elif len(self.buf) >= self.entrylen:
-                r = self.cb(self.buf[: self.entrylen], self.out)
-                self.buf = self.buf[self.entrylen :]
+                self.cb(self.buf[: self.entrylen], self.out)
+                self.buf = self.buf[self.entrylen:]
                 self.entrylen = None
             else:
                 # Wait for more data
@@ -93,7 +99,7 @@ class Ringo:
             purl = self.host + url
 
         curl.setopt(curl.URL, purl)
-        if data == None:
+        if data is None:
             curl.setopt(curl.HTTPGET, 1)
         else:
             curl.setopt(curl.POST, 1)

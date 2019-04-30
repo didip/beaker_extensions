@@ -8,9 +8,7 @@ try:
     from dynomite import Dynomite
     from dynomite.ttypes import *
 except ImportError:
-    raise InvalidCacheBackendError(
-        "Dynomite cache backend requires the 'dynomite' library"
-    )
+    raise InvalidCacheBackendError("Dynomite cache backend requires the 'dynomite' library")
 
 try:
     from thrift import Thrift
@@ -18,18 +16,14 @@ try:
     from thrift.transport import TTransport
     from thrift.protocol import TBinaryProtocol
 except ImportError:
-    raise InvalidCacheBackendError(
-        "Dynomite cache backend requires the 'thrift' library"
-    )
+    raise InvalidCacheBackendError("Dynomite cache backend requires the 'thrift' library")
 
 log = logging.getLogger(__name__)
 
 
 class DynomiteManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-        NoSqlManager.__init__(
-            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
-        )
+        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
     def open_connection(self, host, port):
         self.transport = TSocket.TSocket(host, int(port))

@@ -140,9 +140,7 @@ class Ringo:
 
     def put(self, domain, key, value, **kwargs):
         kwargs["decoder"] = DecodeJson
-        return self.check_reply(
-            self.request("/mon/data/%s/%s" % (domain, key), value, **kwargs)
-        )
+        return self.check_reply(self.request("/mon/data/%s/%s" % (domain, key), value, **kwargs))
 
     def get(self, domain, key, **kwargs):
         url = "/mon/data/%s/%s" % (domain, key)

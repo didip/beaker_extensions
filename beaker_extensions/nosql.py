@@ -15,9 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class NoSqlManager(NamespaceManager):
-    def __init__(
-        self, namespace, url=None, data_dir=None, lock_dir=None, expire=None, **params
-    ):
+    def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, expire=None, **params):
         NamespaceManager.__init__(self, namespace)
 
         if not url:
@@ -50,10 +48,7 @@ class NoSqlManager(NamespaceManager):
         self.db_conn = None
 
     def get_creation_lock(self, key):
-        return file_synchronizer(
-            identifier="tccontainer/funclock/%s" % self.namespace,
-            lock_dir=self.lock_dir,
-        )
+        return file_synchronizer(identifier="tccontainer/funclock/%s" % self.namespace, lock_dir=self.lock_dir)
 
     def _format_key(self, key):
         return self.namespace + "_"

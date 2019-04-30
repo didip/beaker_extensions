@@ -21,19 +21,13 @@ class RedisManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
         self.db = params.pop("db", None)
         self.dbpass = params.pop("password", None)
-        NoSqlManager.__init__(
-            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
-        )
+        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
     def open_connection(self, host, port, **params):
         pool_key = self._format_pool_key(host, port, self.db)
         if pool_key not in self.connection_pools:
-            self.connection_pools[pool_key] = ConnectionPool(
-                host=host, port=port, db=self.db, password=self.dbpass
-            )
-        self.db_conn = StrictRedis(
-            connection_pool=self.connection_pools[pool_key], **params
-        )
+            self.connection_pools[pool_key] = ConnectionPool(host=host, port=port, db=self.db, password=self.dbpass)
+        self.db_conn = StrictRedis(connection_pool=self.connection_pools[pool_key], **params)
 
     def __contains__(self, key):
         return self.db_conn.exists(self._format_key(key))

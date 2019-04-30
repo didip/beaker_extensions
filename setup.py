@@ -18,9 +18,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=["beaker==1.9.0+dd.20"],
-    dependecy_links=[
-        "git+https://github.com/DataDog/beaker@1.9.0+dd.20#egg=beaker==1.9.0+dd.20"
-    ],
+    dependecy_links=["git+https://github.com/DataDog/beaker@1.9.0+dd.20#egg=beaker==1.9.0+dd.20"],
     extras_require={
         "cassandra_cql": ["cassandra-driver>=3.1.0"],  # 3.1.0 added result iterators
         "testsuite": [TESTS_REQUIRE],

@@ -30,14 +30,7 @@ import UserDict
 
 __version__ = "1.1.17"
 
-__all__ = [
-    "Tyrant",
-    "TyrantError",
-    "PyTyrant",
-    "RDBMONOULOG",
-    "RDBXOLCKREC",
-    "RDBXOLCKGLB",
-]
+__all__ = ["Tyrant", "TyrantError", "PyTyrant", "RDBMONOULOG", "RDBXOLCKREC", "RDBXOLCKGLB"]
 
 
 class TyrantError(Exception):
@@ -124,12 +117,7 @@ def _t2W(code, key, value, width):
 
 
 def _t3F(code, func, opts, key, value):
-    return [
-        struct.pack(">BBIIII", MAGIC, code, len(func), opts, len(key), len(value)),
-        func,
-        key,
-        value,
-    ]
+    return [struct.pack(">BBIIII", MAGIC, code, len(func), opts, len(key), len(value)), func, key, value]
 
 
 def _tDouble(code, key, integ, fract):
@@ -289,9 +277,7 @@ class PyTyrant(object, UserDict.DictMixin):
         self.t.misc("putlist", opts, lst)
 
     def call_func(self, func, key, value, record_locking=False, global_locking=False):
-        opts = (record_locking and RDBXOLCKREC or 0) | (
-            global_locking and RDBXOLCKGLB or 0
-        )
+        opts = (record_locking and RDBXOLCKREC or 0) | (global_locking and RDBXOLCKGLB or 0)
         return self.t.ext(func, opts, key, value)
 
     def get_size(self, key):

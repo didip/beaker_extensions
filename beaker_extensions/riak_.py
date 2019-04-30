@@ -18,9 +18,7 @@ class RiakManager(NoSqlManager):
     """
 
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-        NoSqlManager.__init__(
-            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
-        )
+        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
 
     def open_connection(self, host, port):
         self.db_conn = riak.RiakClient(protocol="pbc", host=host, pb_port=int(port))

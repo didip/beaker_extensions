@@ -15,15 +15,9 @@ from beaker_extensions.nosql import pickle
 try:
     import cassandra
     from cassandra.cluster import Cluster
-    from cassandra.policies import (
-        TokenAwarePolicy,
-        DCAwareRoundRobinPolicy,
-        RetryPolicy,
-    )
+    from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
 except ImportError:
-    raise InvalidCacheBackendError(
-        "cassandra_cql backend requires the 'cassandra-driver' library"
-    )
+    raise InvalidCacheBackendError("cassandra_cql backend requires the 'cassandra-driver' library")
 
 
 log = logging.getLogger(__name__)
@@ -46,29 +40,15 @@ class CassandraCqlManager(NoSqlManager):
 
     connection_pools = {}
 
-    def __init__(
-        self,
-        namespace,
-        url=None,
-        data_dir=None,
-        lock_dir=None,
-        keyspace=None,
-        column_family=None,
-        **params
-    ):
-        NoSqlManager.__init__(
-            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
-        )
+    def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, keyspace=None, column_family=None, **params):
+        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
         connection_key = "-".join(
-            ["%r" % url, "%r" % keyspace, "%r" % column_family]
-            + ["%s:%r" % (k, params[k]) for k in params]
+            ["%r" % url, "%r" % keyspace, "%r" % column_family] + ["%s:%r" % (k, params[k]) for k in params]
         )
         if connection_key in self.connection_pools:
             self.db_conn = self.connection_pools[connection_key]
         else:
-            self.db_conn = _CassandraBackedDict(
-                namespace, url, keyspace, column_family, **params
-            )
+            self.db_conn = _CassandraBackedDict(namespace, url, keyspace, column_family, **params)
             self.connection_pools[connection_key] = self.db_conn
 
     def open_connection(self, host, port, **params):
@@ -95,14 +75,9 @@ class _CassandraBackedDict(object):
     A class with an interface very similar to a dict that NoSqlManager will use.
     """
 
-    _RETRYABLE_EXCEPTIONS = (
-        cassandra.DriverException,
-        cassandra.RequestExecutionException,
-    )
+    _RETRYABLE_EXCEPTIONS = (cassandra.DriverException, cassandra.RequestExecutionException)
 
-    def __init__(
-        self, namespace, url=None, keyspace=None, column_family=None, **params
-    ):
+    def __init__(self, namespace, url=None, keyspace=None, column_family=None, **params):
         if not keyspace:
             raise MissingCacheParameter("keyspace is required")
         if re.search(r"\W", keyspace):
@@ -126,9 +101,7 @@ class _CassandraBackedDict(object):
         except NameError:
             basestring = str
         if isinstance(consistency_level_param, basestring):
-            consistency_level = getattr(
-                cassandra.ConsistencyLevel, consistency_level_param.upper(), None
-            )
+            consistency_level = getattr(cassandra.ConsistencyLevel, consistency_level_param.upper(), None)
             if consistency_level:
                 self.__session.default_consistency_level = consistency_level
 
@@ -152,9 +125,7 @@ class _CassandraBackedDict(object):
         cluster_params["contact_points"] = contact_points[:2]
 
         if "max_schema_agreement_wait" in params:
-            cluster_params["max_schema_agreement_wait"] = int(
-                params["max_schema_agreement_wait"]
-            )
+            cluster_params["max_schema_agreement_wait"] = int(params["max_schema_agreement_wait"])
 
         # Clients should use any details they have to route intelligently
         if "datacenter" in params:
@@ -251,10 +222,7 @@ class _CassandraBackedDict(object):
                         raise
                     t = self._tries - _tries
                     log.warning(
-                        "Caught retryable exception on try=%d (stack "
-                        "trace below). Retrying.",
-                        t,
-                        exc_info=True,
+                        "Caught retryable exception on try=%d (stack " "trace below). Retrying.", t, exc_info=True
                     )
 
         return wrapper
@@ -270,14 +238,9 @@ class _CassandraBackedDict(object):
     @_retry
     def __setitem__(self, key, value):
         if self._expiretime:
-            self.__session.execute(
-                self.__set_expire_stmt,
-                {"key": key, "data": value, "[ttl]": self._expiretime},
-            )
+            self.__session.execute(self.__set_expire_stmt, {"key": key, "data": value, "[ttl]": self._expiretime})
         else:
-            self.__session.execute(
-                self.__set_no_expire_stmt, {"key": key, "data": value}
-            )
+            self.__session.execute(self.__set_no_expire_stmt, {"key": key, "data": value})
 
     @_retry
     def get(self, key):
@@ -314,37 +277,19 @@ class _CassandraBackedDict(object):
 
 
 class _NextHostRetryPolicy(RetryPolicy):
-    def on_read_timeout(
-        self,
-        query,
-        consistency,
-        required_responses,
-        received_responses,
-        data_retrieved,
-        retry_num,
-    ):
+    def on_read_timeout(self, query, consistency, required_responses, received_responses, data_retrieved, retry_num):
         if retry_num == 0:
             return self.RETRY_NEXT_HOST, None
         else:
             return self.RETHROW, None
 
-    def on_write_timeout(
-        self,
-        query,
-        consistency,
-        write_type,
-        required_responses,
-        received_responses,
-        retry_num,
-    ):
+    def on_write_timeout(self, query, consistency, write_type, required_responses, received_responses, retry_num):
         if retry_num == 0:
             return self.RETRY_NEXT_HOST, None
         else:
             return self.RETHROW, None
 
-    def on_unavailable(
-        self, query, consistency, required_replicas, alive_replicas, retry_num
-    ):
+    def on_unavailable(self, query, consistency, required_replicas, alive_replicas, retry_num):
         if retry_num == 0:
             return self.RETRY_NEXT_HOST, None
         else:

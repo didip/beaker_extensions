@@ -26,21 +26,14 @@ class RedisTestOverrides(object):
 @attr("redis")
 class TestRedisPickle(RedisTestOverrides, CommonMethodMixin, unittest.TestCase):
     def setUp(self):
-        self.cache = Cache(
-            "testns",
-            type="ext:redis",
-            url="redis://localhost:6379",
-            serializer="pickle",
-        )
+        self.cache = Cache("testns", type="ext:redis", url="redis://localhost:6379", serializer="pickle")
         self.cache.clear()
 
 
 @attr("redis")
 class TestRedisJson(RedisTestOverrides, CommonMethodMixin, unittest.TestCase):
     def setUp(self):
-        self.cache = Cache(
-            "testns", type="ext:redis", url="redis://localhost:6379", serializer="json"
-        )
+        self.cache = Cache("testns", type="ext:redis", url="redis://localhost:6379", serializer="json")
         self.cache.clear()
 
     @nottest

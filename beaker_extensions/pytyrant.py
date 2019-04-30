@@ -28,19 +28,24 @@ import socket
 import struct
 import UserDict
 
-__version__ = '1.1.17'
+__version__ = "1.1.17"
 
 __all__ = [
-    'Tyrant', 'TyrantError', 'PyTyrant',
-    'RDBMONOULOG', 'RDBXOLCKREC', 'RDBXOLCKGLB',
+    "Tyrant",
+    "TyrantError",
+    "PyTyrant",
+    "RDBMONOULOG",
+    "RDBXOLCKREC",
+    "RDBXOLCKGLB",
 ]
+
 
 class TyrantError(Exception):
     pass
 
 
 DEFAULT_PORT = 1978
-MAGIC = 0xc8
+MAGIC = 0xC8
 
 
 RDBMONOULOG = 1 << 0
@@ -52,6 +57,7 @@ class C(object):
     """
     Tyrant Protocol constants
     """
+
     put = 0x10
     putkeep = 0x11
     putcat = 0x12
@@ -83,62 +89,43 @@ def _t0(code):
 
 
 def _t1(code, key):
-    return [
-        struct.pack('>BBI', MAGIC, code, len(key)),
-        key,
-    ]
+    return [struct.pack(">BBI", MAGIC, code, len(key)), key]
 
 
 def _t1FN(code, func, opts, args):
-    outlst = [
-        struct.pack('>BBIII', MAGIC, code, len(func), opts, len(args)),
-        func,
-    ]
+    outlst = [struct.pack(">BBIII", MAGIC, code, len(func), opts, len(args)), func]
     for k in args:
-        outlst.extend([struct.pack('>I', len(k)), k])
+        outlst.extend([struct.pack(">I", len(k)), k])
     return outlst
 
 
 def _t1R(code, key, msec):
-    return [
-        struct.pack('>BBIQ', MAGIC, code, len(key), msec),
-        key,
-    ]
+    return [struct.pack(">BBIQ", MAGIC, code, len(key), msec), key]
+
 
 # Didip: I changed BBII to BBIl support negative values.
 def _t1M(code, key, count):
-    return [
-        struct.pack('>BBIl', MAGIC, code, len(key), count),
-        key,
-    ]
+    return [struct.pack(">BBIl", MAGIC, code, len(key), count), key]
 
 
 def _tN(code, klst):
-    outlst = [struct.pack('>BBI', MAGIC, code, len(klst))]
+    outlst = [struct.pack(">BBI", MAGIC, code, len(klst))]
     for k in klst:
-        outlst.extend([struct.pack('>I', len(k)), k])
+        outlst.extend([struct.pack(">I", len(k)), k])
     return outlst
 
 
 def _t2(code, key, value):
-    return [
-        struct.pack('>BBII', MAGIC, code, len(key), len(value)),
-        key,
-        value,
-    ]
+    return [struct.pack(">BBII", MAGIC, code, len(key), len(value)), key, value]
 
 
 def _t2W(code, key, value, width):
-    return [
-        struct.pack('>BBIII', MAGIC, code, len(key), len(value), width),
-        key,
-        value,
-    ]
+    return [struct.pack(">BBIII", MAGIC, code, len(key), len(value), width), key, value]
 
 
 def _t3F(code, func, opts, key, value):
     return [
-        struct.pack('>BBIIII', MAGIC, code, len(func), opts, len(key), len(value)),
+        struct.pack(">BBIIII", MAGIC, code, len(func), opts, len(key), len(value)),
         func,
         key,
         value,
@@ -146,18 +133,15 @@ def _t3F(code, func, opts, key, value):
 
 
 def _tDouble(code, key, integ, fract):
-    return [
-        struct.pack('>BBIQQ', MAGIC, code, len(key), integ, fract),
-        key,
-    ]
+    return [struct.pack(">BBIQQ", MAGIC, code, len(key), integ, fract), key]
 
 
 def socksend(sock, lst):
-    sock.sendall(''.join(lst))
+    sock.sendall("".join(lst))
 
 
 def sockrecv(sock, bytes):
-    d = ''
+    d = ""
     while len(d) < bytes:
         d += sock.recv(min(8192, bytes - len(d)))
     return d
@@ -170,11 +154,11 @@ def socksuccess(sock):
 
 
 def socklen(sock):
-    return struct.unpack('>I', sockrecv(sock, 4))[0]
+    return struct.unpack(">I", sockrecv(sock, 4))[0]
 
 
 def socklong(sock):
-    return struct.unpack('>Q', sockrecv(sock, 8))[0]
+    return struct.unpack(">Q", sockrecv(sock, 8))[0]
 
 
 def sockstr(sock):
@@ -182,7 +166,7 @@ def sockstr(sock):
 
 
 def sockdouble(sock):
-    intpart, fracpart = struct.unpack('>QQ', sockrecv(sock, 16))
+    intpart, fracpart = struct.unpack(">QQ", sockrecv(sock, 16))
     return intpart + (fracpart * 1e-12)
 
 
@@ -198,6 +182,7 @@ class PyTyrant(object, UserDict.DictMixin):
     """
     Dict-like proxy for a Tyrant instance
     """
+
     @classmethod
     def open(cls, *args, **kw):
         return cls(Tyrant.open(*args, **kw))
@@ -267,9 +252,9 @@ class PyTyrant(object, UserDict.DictMixin):
         # Make progressively weaker assumptions about "other"
         if other is None:
             pass
-        elif hasattr(other, 'iteritems'):
+        elif hasattr(other, "iteritems"):
             self.multi_set(other.iteritems())
-        elif hasattr(other, 'keys'):
+        elif hasattr(other, "keys"):
             self.multi_set([(k, other[k]) for k in other.keys()])
         else:
             self.multi_set(other)
@@ -277,13 +262,13 @@ class PyTyrant(object, UserDict.DictMixin):
             self.update(kwargs)
 
     def multi_del(self, keys, no_update_log=False):
-        opts = (no_update_log and RDBMONOULOG or 0)
+        opts = no_update_log and RDBMONOULOG or 0
         if not isinstance(keys, (list, tuple)):
             keys = list(keys)
         self.t.misc("outlist", opts, keys)
 
     def multi_get(self, keys, no_update_log=False):
-        opts = (no_update_log and RDBMONOULOG or 0)
+        opts = no_update_log and RDBMONOULOG or 0
         if not isinstance(keys, (list, tuple)):
             keys = list(keys)
         rval = self.t.misc("getlist", opts, keys)
@@ -297,16 +282,16 @@ class PyTyrant(object, UserDict.DictMixin):
         return map(d.get, keys)
 
     def multi_set(self, items, no_update_log=False):
-        opts = (no_update_log and RDBMONOULOG or 0)
+        opts = no_update_log and RDBMONOULOG or 0
         lst = []
         for k, v in items:
             lst.extend((k, v))
         self.t.misc("putlist", opts, lst)
 
     def call_func(self, func, key, value, record_locking=False, global_locking=False):
-        opts = (
-            (record_locking and RDBXOLCKREC or 0) |
-            (global_locking and RDBXOLCKGLB or 0))
+        opts = (record_locking and RDBXOLCKREC or 0) | (
+            global_locking and RDBXOLCKGLB or 0
+        )
         return self.t.ext(func, opts, key, value)
 
     def get_size(self, key):
@@ -316,7 +301,7 @@ class PyTyrant(object, UserDict.DictMixin):
             raise KeyError(key)
 
     def get_stats(self):
-        return dict(l.split('\t', 1) for l in self.t.stat().splitlines() if l)
+        return dict(l.split("\t", 1) for l in self.t.stat().splitlines() if l)
 
     def prefix_keys(self, prefix, maxkeys=None):
         if maxkeys is None:
@@ -334,14 +319,14 @@ class PyTyrant(object, UserDict.DictMixin):
 
     def close(self):
         self.t.close()
-        
+
     def addint(self, key, num):
         self.t.addint(key, num)
 
 
 class Tyrant(object):
     @classmethod
-    def open(cls, host='127.0.0.1', port=DEFAULT_PORT):
+    def open(cls, host="127.0.0.1", port=DEFAULT_PORT):
         sock = socket.socket()
         sock.connect((host, port))
         sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
@@ -542,8 +527,9 @@ class Tyrant(object):
 
 def main():
     import doctest
+
     doctest.testmod()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,13 +9,18 @@ from beaker_extensions.nosql import pickle
 try:
     from pytyrant import PyTyrant
 except ImportError:
-    raise InvalidCacheBackendError("PyTyrant cache backend requires the 'pytyrant' library")
+    raise InvalidCacheBackendError(
+        "PyTyrant cache backend requires the 'pytyrant' library"
+    )
 
 log = logging.getLogger(__name__)
 
+
 class TokyoTyrantManager(NoSqlManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
+        NoSqlManager.__init__(
+            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
+        )
 
     def open_connection(self, host, port):
         self.db_conn = PyTyrant.open(host, int(port))
@@ -24,7 +29,7 @@ class TokyoTyrantManager(NoSqlManager):
         return self.db_conn.has_key(self._format_key(key))
 
     def set_value(self, key, value):
-        self.db_conn[self._format_key(key)] =  pickle.dumps(value, 2)
+        self.db_conn[self._format_key(key)] = pickle.dumps(value, 2)
 
     def __delitem__(self, key):
         del self.db_conn[self._format_key(key)]

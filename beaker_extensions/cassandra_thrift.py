@@ -42,7 +42,7 @@ class CassandraManager(NoSqlManager):
             system_manager.create_column_family(self.keyspace, self.column_family)
             self.cf = pycassa.ColumnFamily(self.pool, self.column_family)
 
-    def __contains__(self, key):        
+    def __contains__(self, key):
         return self.cf.get_count(self._format_key(key)) > 0
 
     def set_value(self, key, value, expiretime=None):
@@ -56,7 +56,7 @@ class CassandraManager(NoSqlManager):
         except pycassa.NotFoundException:
             return None
 
-    def __delitem__(self, key):        
+    def __delitem__(self, key):
         key = self._format_key(key)
         self.cf.remove(self._format_key(key))
 

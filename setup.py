@@ -1,7 +1,9 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2.0'
+version = '0.2.0+dd.21'
+
+TESTS_REQUIRE = ['nose']
 
 setup(name='beaker_extensions',
       version=version,
@@ -17,9 +19,13 @@ setup(name='beaker_extensions',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=[
-          # -*- Extra requirements: -*-
-      ],
+      install_requires=[],
+      extras_require={
+          'cassandra_cql': ['cassandra-driver>=3.1.0'],  # 3.1.0 added result iterators
+          'testsuite': [TESTS_REQUIRE]
+      },
+      test_suite='nose.collector',
+      tests_require=TESTS_REQUIRE,
       entry_points="""
       # -*- Entry points: -*-
       [beaker.backends]
@@ -28,6 +34,7 @@ setup(name='beaker_extensions',
       riak = beaker_extensions.riak_:RiakManager
       dynomite = beaker_extensions.dynomite_:DynomiteManager
       ringo = beaker_extensions.ringo:RingoManager
-      cassandra = beaker_extensions.cassandra:CassandraManager
+      cassandra = beaker_extensions.cassandra_thrift:CassandraManager
+      cassandra_cql = beaker_extensions.cassandra_cql:CassandraCqlManager
       """,
       )

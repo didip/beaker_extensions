@@ -1,6 +1,6 @@
 import json
 import logging
- 
+
 from beaker.container import NamespaceManager, Container
 from beaker.synchronization import file_synchronizer
 from beaker.util import verify_directory
@@ -10,9 +10,9 @@ try:
     import cPickle as pickle
 except:
     import pickle
- 
+
 log = logging.getLogger(__name__)
- 
+
 class NoSqlManager(NamespaceManager):
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, expire=None, **params):
         NamespaceManager.__init__(self, namespace)
@@ -29,6 +29,7 @@ class NoSqlManager(NamespaceManager):
 
         # Specify the serializer to use (pickle or json?)
         self.serializer = params.pop('serializer', 'pickle')
+        assert self.serializer in ['pickle', 'json']
 
         self._expiretime = int(expire) if expire else None
 
@@ -51,17 +52,22 @@ class NoSqlManager(NamespaceManager):
             lock_dir = self.lock_dir)
 
     def _format_key(self, key):
-        return self.namespace + '_' 
+        return self.namespace + '_'
 
     def __getitem__(self, key):
         if self.serializer == 'json':
             payload = self.db_conn.get(self._format_key(key))
+            if payload is None:
+                raise KeyError(key)
             if isinstance(payload, bytes):
                 return json.loads(payload.decode('utf-8'))
             else:
                 return json.loads(payload)
         else:
-            return pickle.loads(self.db_conn.get(self._format_key(key)))
+            payload = self.db_conn.get(self._format_key(key))
+            if payload is None:
+                raise KeyError(key)
+            return pickle.loads(payload)
 
     def __contains__(self, key):
         return self.db_conn.has_key(self._format_key(key))

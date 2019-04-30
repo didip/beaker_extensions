@@ -8,9 +8,12 @@ from beaker_extensions.nosql import pickle
 try:
     import pycassa
 except ImportError:
-    raise InvalidCacheBackendError("Cassandra cache backend requires the 'pycassa' library")
+    raise InvalidCacheBackendError(
+        "Cassandra cache backend requires the 'pycassa' library"
+    )
 
 log = logging.getLogger(__name__)
+
 
 class CassandraManager(NoSqlManager):
     """
@@ -25,12 +28,24 @@ class CassandraManager(NoSqlManager):
     The default column_family is 'beaker'.
     If it doesn't exist under given keyspace, it is created automatically.
     """
-    def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, keyspace=None, column_family=None, **params):
+
+    def __init__(
+        self,
+        namespace,
+        url=None,
+        data_dir=None,
+        lock_dir=None,
+        keyspace=None,
+        column_family=None,
+        **params
+    ):
         if not keyspace:
             raise MissingCacheParameter("keyspace is required")
         self.keyspace = keyspace
-        self.column_family = column_family or 'beaker'
-        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
+        self.column_family = column_family or "beaker"
+        NoSqlManager.__init__(
+            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
+        )
 
     def open_connection(self, host, port, **params):
         self.pool = pycassa.ConnectionPool(self.keyspace)
@@ -47,12 +62,12 @@ class CassandraManager(NoSqlManager):
 
     def set_value(self, key, value, expiretime=None):
         key = self._format_key(key)
-        self.cf.insert(key, {'data': pickle.dumps(value, 2)}, ttl=expiretime)
+        self.cf.insert(key, {"data": pickle.dumps(value, 2)}, ttl=expiretime)
 
     def __getitem__(self, key):
         try:
             result = self.cf.get(self._format_key(key))
-            return pickle.loads(result['data'])
+            return pickle.loads(result["data"])
         except pycassa.NotFoundException:
             return None
 
@@ -61,14 +76,16 @@ class CassandraManager(NoSqlManager):
         self.cf.remove(self._format_key(key))
 
     def _format_key(self, key):
-        return '%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
+        return "%s:%s" % (self.namespace, key.replace(" ", "\302\267"))
 
     def do_remove(self):
         for key, empty in cf.get_range(column_count=0, filter_empty=False):
             cf.remove(key)
 
     def keys(self):
-        return list(key for key, empty in self.cf.get_range(column_count=0, filter_empty=False))
+        return list(
+            key for key, empty in self.cf.get_range(column_count=0, filter_empty=False)
+        )
 
 
 class CassandraContainer(Container):

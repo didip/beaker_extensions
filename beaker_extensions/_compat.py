@@ -7,8 +7,10 @@ PY2 = sys.version_info[0] == 2
 
 
 if not PY2:  # pragma: no cover
+
     def u_(s):
         return str(s)
+
 
 else:
     unicode_text = unicode
@@ -20,4 +22,4 @@ else:
 
         if not isinstance(s, byte_string):
             s = str(s)
-        return unicode(s, 'utf-8')
+        return unicode(s, "utf-8")

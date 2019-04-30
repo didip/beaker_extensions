@@ -11,16 +11,20 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+
 class RiakManager(NoSqlManager):
-    '''
+    """
     Riak Python client packages data in JSON by default.
-    '''
+    """
+
     def __init__(self, namespace, url=None, data_dir=None, lock_dir=None, **params):
-        NoSqlManager.__init__(self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params)
+        NoSqlManager.__init__(
+            self, namespace, url=url, data_dir=data_dir, lock_dir=lock_dir, **params
+        )
 
     def open_connection(self, host, port):
-        self.db_conn = riak.RiakClient(protocol='pbc', host=host, pb_port=int(port))
-        self.bucket = self.db_conn.bucket('beaker_cache')
+        self.db_conn = riak.RiakClient(protocol="pbc", host=host, pb_port=int(port))
+        self.bucket = self.db_conn.bucket("beaker_cache")
 
     def __contains__(self, key):
         return self.bucket.get(self._format_key(key)).exists
@@ -40,7 +44,7 @@ class RiakManager(NoSqlManager):
         self.bucket.get(self._format_key(key)).delete()
 
     def _format_key(self, key):
-        return 'beaker:%s:%s' % (self.namespace, key.replace(' ', '\302\267'))
+        return "beaker:%s:%s" % (self.namespace, key.replace(" ", "\302\267"))
 
     def do_remove(self):
         raise Exception("Unimplemented")

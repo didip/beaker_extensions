@@ -18,8 +18,7 @@ class CassandraCqlSetup(object):
 
     @classmethod
     def setUpClass(cls):
-        # TODO: Update when interface exists in beaker to add backens
-        beaker.cache.clsmap._clsmap['cassandra_cql'] = CassandraCqlManager
+        Cache.add_backend('cassandra_cql', CassandraCqlManager)
         import cassandra
         from cassandra.cluster import Cluster
 

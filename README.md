@@ -2,7 +2,7 @@
 
 ```
 # install requirements
-./build.sh
+. ./build.sh
 ```
 
 ## Installation

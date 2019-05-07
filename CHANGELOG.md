@@ -1,3 +1,12 @@
+# 0.2.0+dd.26
+
+Hello Friend, 
+
+- Added formatting.
+- Added testing.
+- Added ability to run tests locally.
+- Updated required beaker version.
+
 # 0.2.0+dd.18
 
 Remove the `ddtrace` option from `CassandraCqlManager` (deprecated in favor of `ddtrace` monkey patching).

@@ -78,7 +78,7 @@ class RedisManager(NoSqlManager):
         return '{0}:{1}:{2}'.format(host, port, self.db)
 
     def do_remove(self):
-        self.db_conn.flush()
+        self.db_conn.flushdb()
 
     def keys(self):
         return self.db_conn.keys('beaker:%s:*' % self.namespace)

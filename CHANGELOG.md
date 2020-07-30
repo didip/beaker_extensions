@@ -1,6 +1,10 @@
+# 0.2.0+dd.27
+
+Add support for username and password authentication to `CassandraCQLManager`
+
 # 0.2.0+dd.26
 
-Hello Friend, 
+Hello Friend,
 
 - Added formatting.
 - Added testing.

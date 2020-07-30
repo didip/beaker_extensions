@@ -11,6 +11,7 @@ from beaker_extensions.nosql import NoSqlManager
 
 try:
     import cassandra
+    from cassandra.auth import PlainTextAuthProvider
     from cassandra.cluster import Cluster
     from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
 except ImportError:
@@ -136,6 +137,12 @@ class _CassandraBackedDict(object):
         # is only for timeouts from the cassandra coordinator's perspective,
         # and wouldn't retry if there was a failure reaching cassadra at all.
         cluster_params["default_retry_policy"] = _NextHostRetryPolicy()
+
+        # If username and password is provided in the params
+        # then include an auth provider when connecting to the cluster
+        if "username" in params and "password" in params:
+            auth = PlainTextAuthProvider(username=params["username"], password=params["password"])
+            cluster_params["auth_provider"] = auth
 
         log.info("Connecting to cassandra cluster with params %s", cluster_params)
         return Cluster(**cluster_params)

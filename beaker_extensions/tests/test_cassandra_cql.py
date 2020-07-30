@@ -237,3 +237,35 @@ class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
         with self.assertRaises(cassandra.DriverException):
             c["k"] = "v"
         assert s.calls == 3
+
+@attr("cassandra_cql")
+class TestCassandraCqlAuth(CassandraCqlSetup, unittest.TestCase):
+    __keyspace = "test_ks"
+    __table = "test_table"
+
+    def setUp(self):
+        # Override NotImplemented version from CassandraCqlSetup
+        pass
+
+    def test_auth_included_if_credentials_provided(self):
+        username =  "test_user"
+        password = "test_password"
+
+        cm = CassandraCqlManager(
+            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table,
+            username=username, password=password,
+        )
+        # Got to do what you got to do
+        cluster = cm.db_conn._CassandraBackedDict__session.cluster
+
+        assert cluster.auth_provider.username == username
+        assert cluster.auth_provider.password == password
+
+    def test_auth_not_included_if_credentials_not_provided(self):
+        cm = CassandraCqlManager(
+            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table,
+        )
+        # Got to do what you got to do
+        cluster = cm.db_conn._CassandraBackedDict__session.cluster
+
+        assert cluster.auth_provider is None

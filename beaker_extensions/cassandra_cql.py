@@ -32,6 +32,10 @@ class CassandraCqlManager(NoSqlManager):
         beaker.session.column_family = beaker
         beaker.session.query_timeout = 3 # seconds
 
+    And optionally for authentication
+        beaker.session.username = my_username
+        beaker.session.password = my_secure_password
+
     The default column_family is 'beaker'.
     If it doesn't exist under given keyspace, it is created automatically.
     """

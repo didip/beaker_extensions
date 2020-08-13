@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from time import sleep
 import unittest
 
@@ -9,7 +10,7 @@ from beaker.cache import Cache
 import cassandra
 
 from beaker_extensions.cassandra_cql import CassandraCqlManager, _CassandraBackedDict
-from common import CommonMethodMixin
+from .common import CommonMethodMixin
 
 
 class CassandraCqlSetup(object):

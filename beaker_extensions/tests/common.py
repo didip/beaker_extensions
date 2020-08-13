@@ -1,5 +1,6 @@
 # coding=utf-8
 
+from __future__ import absolute_import
 import time
 
 from beaker_extensions._compat import u_
@@ -122,7 +123,7 @@ class CommonMethodMixin(object):
         assert x == 16
 
         cache.remove_value("test")
-        assert not cache.has_key("test")
+        assert "test" not in cache
         x = cache.get_value("test", createfunc=lambda: 20, expiretime=2)
         assert x == 20
 

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from functools import wraps
 import logging
 import random
@@ -8,6 +9,7 @@ from beaker.exceptions import InvalidCacheBackendError, MissingCacheParameter
 
 from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
+import six
 
 try:
     import cassandra
@@ -98,11 +100,7 @@ class _CassandraBackedDict(object):
         self.__session = cluster.connect(self.__keyspace_cql_safe)
 
         consistency_level_param = params.get("consistency_level")
-        try:
-            basestring
-        except NameError:
-            basestring = str
-        if isinstance(consistency_level_param, basestring):
+        if isinstance(consistency_level_param, six.string_types):
             consistency_level = getattr(cassandra.ConsistencyLevel, consistency_level_param.upper(), None)
             if consistency_level:
                 self.__session.default_consistency_level = consistency_level
@@ -258,11 +256,11 @@ class _CassandraBackedDict(object):
         # https://datastax-oss.atlassian.net/browse/PYTHON-463
         rows = iter(self.__session.execute(self.__get_stmt, [key]))
         try:
-            res = rows.next()
+            res = next(rows)
         except StopIteration:
             return None
         try:
-            rows.next()
+            next(rows)
             assert False, "get {} found more than 1 row".format(key)
         except StopIteration:
             pass

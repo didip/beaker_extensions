@@ -68,7 +68,9 @@ class CassandraCqlManager(NoSqlManager):
         self.set_value(key, value)
 
     def _format_key(self, key):
-        return "%s:%s" % (self.namespace, key.replace(" ", "\302\267"))
+        to_decode = key if isinstance(key, str) else key.decode("utf-8")
+        new_key = to_decode.replace(" ", "\302\267")
+        return "%s:%s" % (self.namespace, new_key)
 
     def get_creation_lock(self, key):
         raise NotImplementedError()
@@ -243,10 +245,11 @@ class _CassandraBackedDict(object):
 
     @_retry
     def __setitem__(self, key, value):
+        data = value if isinstance(value, bytes) else value.encode()
         if self._expiretime:
-            self.__session.execute(self.__set_expire_stmt, {"key": key, "data": value, "[ttl]": self._expiretime})
+            self.__session.execute(self.__set_expire_stmt, {"key": key, "data": data, "[ttl]": self._expiretime})
         else:
-            self.__session.execute(self.__set_no_expire_stmt, {"key": key, "data": value})
+            self.__session.execute(self.__set_no_expire_stmt, {"key": key, "data": data})
 
     @_retry
     def get(self, key):

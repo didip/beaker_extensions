@@ -112,7 +112,7 @@ class CassandraTestOverrides(object):
                 serializer="json",
             )
         except ValueError as error:
-            if "keyspace can only have" not in error.message:
+            if "keyspace can only have" not in error.args[0]:
                 raise
 
     def test_invalid_table(self):
@@ -126,7 +126,7 @@ class CassandraTestOverrides(object):
                 serializer="json",
             )
         except ValueError as error:
-            if "table can only have" not in error.message:
+            if "table can only have" not in error.args[0]:
                 raise
 
 

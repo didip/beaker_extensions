@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 
 from nose.plugins.attrib import attr
@@ -5,7 +6,7 @@ from nose.tools import nottest
 
 from beaker.cache import Cache
 
-from common import CommonMethodMixin
+from .common import CommonMethodMixin
 
 
 class RedisTestOverrides(object):

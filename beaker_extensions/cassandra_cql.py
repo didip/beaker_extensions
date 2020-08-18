@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from functools import wraps
 import logging
 import random
@@ -8,6 +9,7 @@ from beaker.exceptions import InvalidCacheBackendError, MissingCacheParameter
 
 from beaker_extensions.nosql import Container
 from beaker_extensions.nosql import NoSqlManager
+import six
 
 try:
     import cassandra
@@ -66,7 +68,9 @@ class CassandraCqlManager(NoSqlManager):
         self.set_value(key, value)
 
     def _format_key(self, key):
-        return "%s:%s" % (self.namespace, key.replace(" ", "\302\267"))
+        to_decode = key if isinstance(key, str) else key.decode("utf-8")
+        new_key = to_decode.replace(" ", "\302\267")
+        return "%s:%s" % (self.namespace, new_key)
 
     def get_creation_lock(self, key):
         raise NotImplementedError()
@@ -98,11 +102,7 @@ class _CassandraBackedDict(object):
         self.__session = cluster.connect(self.__keyspace_cql_safe)
 
         consistency_level_param = params.get("consistency_level")
-        try:
-            basestring
-        except NameError:
-            basestring = str
-        if isinstance(consistency_level_param, basestring):
+        if isinstance(consistency_level_param, six.string_types):
             consistency_level = getattr(cassandra.ConsistencyLevel, consistency_level_param.upper(), None)
             if consistency_level:
                 self.__session.default_consistency_level = consistency_level
@@ -245,10 +245,11 @@ class _CassandraBackedDict(object):
 
     @_retry
     def __setitem__(self, key, value):
+        data = value if isinstance(value, bytes) else value.encode()
         if self._expiretime:
-            self.__session.execute(self.__set_expire_stmt, {"key": key, "data": value, "[ttl]": self._expiretime})
+            self.__session.execute(self.__set_expire_stmt, {"key": key, "data": data, "[ttl]": self._expiretime})
         else:
-            self.__session.execute(self.__set_no_expire_stmt, {"key": key, "data": value})
+            self.__session.execute(self.__set_no_expire_stmt, {"key": key, "data": data})
 
     @_retry
     def get(self, key):
@@ -258,11 +259,11 @@ class _CassandraBackedDict(object):
         # https://datastax-oss.atlassian.net/browse/PYTHON-463
         rows = iter(self.__session.execute(self.__get_stmt, [key]))
         try:
-            res = rows.next()
+            res = next(rows)
         except StopIteration:
             return None
         try:
-            rows.next()
+            next(rows)
             assert False, "get {} found more than 1 row".format(key)
         except StopIteration:
             pass

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.2.0+dd.27"
+version = "0.3.0+dd.1"
 
 TESTS_REQUIRE = ["nose"]
 
@@ -8,7 +8,11 @@ setup(
     name="beaker_extensions",
     version=version,
     description="Beaker extensions for additional back-end stores.",
-    classifiers=[],  # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+    ],  # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords="",
     author="Didip Kerabat",
     author_email="didipk@gmail.com",

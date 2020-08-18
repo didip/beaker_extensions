@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 from beaker.exceptions import InvalidCacheBackendError
 
@@ -6,7 +7,7 @@ from beaker_extensions.nosql import NoSqlManager
 from beaker_extensions.nosql import pickle
 
 try:
-    from ringogw import Ringo
+    from .ringogw import Ringo
 except ImportError:
     raise InvalidCacheBackendError("Ringo cache backend requires the 'ringogw' library")
 

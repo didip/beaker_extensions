@@ -135,6 +135,11 @@ class _CassandraBackedDict(object):
                 DCAwareRoundRobinPolicy(local_dc=params["datacenter"])
             )
 
+        if "protocol_version" in params:
+            cluster_params["protocol_version"] = int(params["protocol_version"])
+        else:
+            cluster_params["protocol_version"] = cassandra.ProtocolVersion.V4
+
         # We have _CassandraBackedDict-level retrying but I don't know if
         # that'll go to the next host so I want to try stacking it with a driver
         # retry policy that does. We don't want to use _only_ this because this

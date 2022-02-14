@@ -1,16 +1,26 @@
 from __future__ import absolute_import
-from time import sleep
-import unittest
 
+import unittest
+from doctest import Example
+from time import sleep
+from typing import TYPE_CHECKING
+
+import beaker
+import cassandra
+from beaker.cache import Cache
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
-import beaker
-from beaker.cache import Cache
-import cassandra
+from beaker_extensions.cassandra_cql import (
+    CassandraCqlManager,
+    _CassandraBackedDict,
+    _retry,
+)
 
-from beaker_extensions.cassandra_cql import CassandraCqlManager, _CassandraBackedDict
 from .common import CommonMethodMixin
+
+if TYPE_CHECKING:
+    from typing import Literal, NoReturn, Optional, Type
 
 
 class CassandraCqlSetup(object):
@@ -19,7 +29,7 @@ class CassandraCqlSetup(object):
 
     @classmethod
     def setUpClass(cls):
-        Cache.add_backend('cassandra_cql', CassandraCqlManager)
+        Cache.add_backend("cassandra_cql", CassandraCqlManager)
         import cassandra
         from cassandra.cluster import Cluster
 
@@ -132,14 +142,22 @@ class CassandraTestOverrides(object):
 
 @attr("cassandra_cql")
 class TestCassandraCqlPickle(
-    CassandraCqlPickleSetup, CassandraCqlSetup, CassandraTestOverrides, CommonMethodMixin, unittest.TestCase
+    CassandraCqlPickleSetup,
+    CassandraCqlSetup,
+    CassandraTestOverrides,
+    CommonMethodMixin,
+    unittest.TestCase,
 ):
     pass
 
 
 @attr("cassandra_cql")
 class TestCassandraCqlJson(
-    CassandraCqlJsonSetup, CassandraCqlSetup, CassandraTestOverrides, CommonMethodMixin, unittest.TestCase
+    CassandraCqlJsonSetup,
+    CassandraCqlSetup,
+    CassandraTestOverrides,
+    CommonMethodMixin,
+    unittest.TestCase,
 ):
     @nottest
     def test_store_obj(self):
@@ -196,7 +214,12 @@ class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
                 self.calls += 1
 
         c = _CassandraBackedDict(
-            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table, expire=1, tries=3
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
+            expire=1,
+            tries=3,
         )
         s = DummySession()
         c._CassandraBackedDict__session = s  # sad face
@@ -214,7 +237,12 @@ class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
                     raise cassandra.DriverException()
 
         c = _CassandraBackedDict(
-            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table, expire=1, tries=3
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
+            expire=1,
+            tries=3,
         )
         s = DummySession()
         c._CassandraBackedDict__session = s  # sad face
@@ -231,13 +259,19 @@ class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
                 raise cassandra.DriverException()
 
         c = _CassandraBackedDict(
-            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table, expire=1, tries=3
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
+            expire=1,
+            tries=3,
         )
         s = DummySession()
         c._CassandraBackedDict__session = s  # sad face
         with self.assertRaises(cassandra.DriverException):
             c["k"] = "v"
         assert s.calls == 3
+
 
 @attr("cassandra_cql")
 class TestCassandraCqlAuth(CassandraCqlSetup, unittest.TestCase):
@@ -249,12 +283,16 @@ class TestCassandraCqlAuth(CassandraCqlSetup, unittest.TestCase):
         pass
 
     def test_auth_included_if_credentials_provided(self):
-        username =  "test_user"
+        username = "test_user"
         password = "test_password"
 
         cm = CassandraCqlManager(
-            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table,
-            username=username, password=password,
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
+            username=username,
+            password=password,
         )
         # Got to do what you got to do
         cluster = cm.db_conn._CassandraBackedDict__session.cluster
@@ -264,9 +302,104 @@ class TestCassandraCqlAuth(CassandraCqlSetup, unittest.TestCase):
 
     def test_auth_not_included_if_credentials_not_provided(self):
         cm = CassandraCqlManager(
-            "testns", url="localhost:9042", keyspace=self.__keyspace, column_family=self.__table,
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
         )
         # Got to do what you got to do
         cluster = cm.db_conn._CassandraBackedDict__session.cluster
 
         assert cluster.auth_provider is None
+
+
+class ExampleException(Exception):
+    pass
+
+
+class OtherExampleException(Exception):
+    pass
+
+
+class UnhandledException(Exception):
+    pass
+
+
+class ExampleRetryable(object):
+    _tries = 2
+    _RETRYABLE_EXCEPTIONS = (ExampleException, OtherExampleException)
+
+    def __init__(self):
+        self.should_fail = True
+        self.fail_counter = None  # type: Optional[int]
+        self.call_counter = 0
+
+    @_retry
+    def always_passes(self):  # type: () -> Literal[True]
+        self.call_counter += 1
+        return True
+
+    @_retry
+    def always_fails(
+        self, exception_class=ExampleException
+    ):  # type: (Type[Exception]) -> NoReturn
+        self.call_counter += 1
+        raise exception_class()
+
+    @_retry
+    def alternate_fails(self):  # type: () -> Literal[True]
+        self.call_counter += 1
+        try:
+            if self.should_fail:
+                raise OtherExampleException()
+        finally:
+            self.should_fail = not self.should_fail
+        return True
+
+    @_retry(tries=3)
+    def fail_countdown_custom(self, bad_runs):  # type: (int) -> Literal[True]
+        self.call_counter += 1
+        if self.fail_counter is None:
+            self.fail_counter = bad_runs
+        self.fail_counter -= 1
+        if self.fail_counter:
+            raise ExampleException()
+        return True
+
+
+@attr("cassandra_cql")
+class TestRetries(unittest.TestCase):
+    def setUp(self):
+        self.er = ExampleRetryable()
+
+    def test_normal_success(self):
+        x = self.er.always_passes()
+        self.assertEquals(self.er.call_counter, 1)
+
+    def test_normal_fail(self):
+        # Never succeeds
+        with self.assertRaises(ExampleException):
+            self.er.always_fails()
+        self.assertEquals(self.er.call_counter, 2)
+
+    def test_cant_retry(self):
+        # This exception is never retried
+        with self.assertRaises(UnhandledException):
+            self.er.always_fails(UnhandledException)
+        self.assertEquals(self.er.call_counter, 1)
+
+    def test_retries_eventually(self):
+        # Fails once, and then succeeds on the 2nd try
+        assert self.er.alternate_fails()
+        self.assertEquals(self.er.call_counter, 2)
+
+    def test_custom_retries_exceeded(self):
+        # custom override to try 3 times, but function will fail 4 times
+        with self.assertRaises(ExampleException):
+            self.er.fail_countdown_custom(4)
+        self.assertEquals(self.er.call_counter, 3)
+
+    def test_custom_retries_success(self):
+        # custom override to try 3 times, function succeeds on 3rd try
+        assert self.er.fail_countdown_custom(3)
+        self.assertEquals(self.er.call_counter, 3)

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import beaker
 import cassandra
-from beaker.cache import Cache
+from beaker.cache import Cache, clsmap
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
@@ -29,11 +29,12 @@ class CassandraCqlSetup(object):
 
     @classmethod
     def setUpClass(cls):
-        Cache.add_backend("cassandra_cql", CassandraCqlManager)
+        add_backend("cassandra_cql", CassandraCqlManager)
         import cassandra
         from cassandra.cluster import Cluster
 
         cluster = Cluster()
+
         cls.__session = cluster.connect()
         try:
             cls.__create_keyspace()
@@ -63,6 +64,10 @@ class CassandraCqlSetup(object):
 
     def setUp(self):
         raise NotImplementedError
+
+
+def add_backend(name, manager):
+    clsmap._clsmap[name] = manager
 
 
 class CassandraCqlPickleSetup(object):
@@ -264,13 +269,12 @@ class TestCassandraCqlRetry(CassandraCqlSetup, unittest.TestCase):
             keyspace=self.__keyspace,
             column_family=self.__table,
             expire=1,
-            tries=3,
         )
         s = DummySession()
         c._CassandraBackedDict__session = s  # sad face
         with self.assertRaises(cassandra.DriverException):
             c["k"] = "v"
-        assert s.calls == 3
+        assert s.calls == 2
 
 
 @attr("cassandra_cql")
@@ -311,6 +315,19 @@ class TestCassandraCqlAuth(CassandraCqlSetup, unittest.TestCase):
         cluster = cm.db_conn._CassandraBackedDict__session.cluster
 
         assert cluster.auth_provider is None
+
+    def test_float_query_timeout(self):
+        timeout = 9.5
+        cm = CassandraCqlManager(
+            "testns",
+            url="localhost:9042",
+            keyspace=self.__keyspace,
+            column_family=self.__table,
+            query_timeout=timeout,
+        )
+        session = cm.db_conn._CassandraBackedDict__session
+
+        assert session.default_timeout == timeout
 
 
 class ExampleException(Exception):

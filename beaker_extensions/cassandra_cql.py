@@ -221,7 +221,7 @@ class _CassandraBackedDict(object):
         self.__ensure_table()
         self.__prepare_statements()
         # This 10s default matches the driver's default.
-        self.__session.default_timeout = int(params.get("query_timeout", 10))
+        self.__session.default_timeout = float(params.get("query_timeout", 10))
 
     def __connect_to_cluster(self, urls, params):
         cluster_params = {}

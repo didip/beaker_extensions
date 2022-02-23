@@ -6,3 +6,5 @@ build/
 dist/
 venv/
 .tags
+.idea/
+.DS_Store

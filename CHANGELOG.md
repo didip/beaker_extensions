@@ -1,3 +1,10 @@
+# 0.3.0+dd.5
+- allow cassandra query timeout to be set as `float`
+- depend on non-datadog [beaker in same version as Dogweb](https://github.com/DataDog/dogweb/blob/prod/requirements.in#L102) 
+
+# 0.3.0+dd.0
+...
+
 # 0.2.0+dd.27
 
 Add support for username and password authentication to `CassandraCQLManager`

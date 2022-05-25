@@ -11,11 +11,9 @@ from beaker.cache import Cache, clsmap
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
-from beaker_extensions.cassandra_cql import (
-    CassandraCqlManager,
-    _CassandraBackedDict,
-    _retry,
-)
+from beaker_extensions.cassandra_cql import CassandraCqlManager
+from beaker_extensions.cassandra_cql.manager import _CassandraBackedDict
+from beaker_extensions.cassandra_cql.utils import retry
 
 from .common import CommonMethodMixin
 
@@ -351,19 +349,17 @@ class ExampleRetryable(object):
         self.fail_counter = None  # type: Optional[int]
         self.call_counter = 0
 
-    @_retry
+    @retry
     def always_passes(self):  # type: () -> Literal[True]
         self.call_counter += 1
         return True
 
-    @_retry
-    def always_fails(
-        self, exception_class=ExampleException
-    ):  # type: (Type[Exception]) -> NoReturn
+    @retry
+    def always_fails(self, exception_class=ExampleException):  # type: (Type[Exception]) -> NoReturn
         self.call_counter += 1
         raise exception_class()
 
-    @_retry
+    @retry
     def alternate_fails(self):  # type: () -> Literal[True]
         self.call_counter += 1
         try:
@@ -373,7 +369,7 @@ class ExampleRetryable(object):
             self.should_fail = not self.should_fail
         return True
 
-    @_retry(tries=3)
+    @retry(tries=3)
     def fail_countdown_custom(self, bad_runs):  # type: (int) -> Literal[True]
         self.call_counter += 1
         if self.fail_counter is None:

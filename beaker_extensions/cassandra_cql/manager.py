@@ -2,9 +2,11 @@ import random
 import re
 import socket
 import six
+
 from beaker_extensions.nosql import NoSqlManager
-from beaker_extensions.cassandra_cql.utils import retry
+from beaker_extensions.cassandra_cql.metrics import StatsdMetrics
 from beaker_extensions.cassandra_cql.retry_policy import AlwaysRetryNextHostPolicy
+from beaker_extensions.cassandra_cql.utils import retry
 from beaker.exceptions import MissingCacheParameter
 from beaker.exceptions import InvalidCacheBackendError
 
@@ -159,7 +161,13 @@ class _CassandraBackedDict(object):
             cluster_params["auth_provider"] = auth
 
         log.info("Connecting to cassandra cluster with params %s", cluster_params)
-        return Cluster(**cluster_params)
+        cluster = Cluster(**cluster_params)
+
+        if params.get("cluster_metrics_enabled", False):
+            metrics = StatsdMetrics.bind_ref(cluster)
+            cluster.metrics = metrics  # type: ignore
+
+        return cluster
 
     def __resolve_hostnames(self, hostnames):
         """Resolves a list of hostnames into a list of IP addresses using DNS."""

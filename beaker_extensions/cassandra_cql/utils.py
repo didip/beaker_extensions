@@ -38,7 +38,7 @@ def retry(
     func=None,  # type: Optional[F]
     tries=None,  # type: Optional[int]
 ):  # type: (...) -> Union[F, Decorator[F]]
-    """_retry will call the decorated function a number of times if a registered Exception is raised
+    """retry will call the decorated function a number of times if a registered Exception is raised
 
     Args:
         tries (int, optional): The number of times to try the function. Defaults to the Class attribute `_tries`.

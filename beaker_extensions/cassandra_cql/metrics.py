@@ -58,7 +58,10 @@ class _RequestTimer(object):
         self,
         value,  # type: float
     ):
-        self._statsd.distribution(self._metric, value)
+        try:
+            self._statsd.distribution(self._metric, value)
+        except Exception:
+            log.debug("Error occurred while submitting Cassandra request timing: ignoring", exc_info=True)
 
 
 class _SupportsMetrics(Protocol):

@@ -128,7 +128,7 @@ class StatsdMetrics:
         try:
             self._statsd.increment(self._STATS_PREFIX + "response." + status)
         except Exception:
-            log.warn("Error occurred while submitting Cassandra response stats: ignoring", exc_info=True)
+            log.debug("Error occurred while submitting Cassandra response stats: ignoring", exc_info=True)
 
     def on_connection_error(self):
         """An unrecoverable error was hit when attempting to use a connection,
@@ -197,6 +197,6 @@ class StatsdMetrics:
         try:
             self._submit_cluster_gauges()
         except Exception:
-            log.warn("Error occurred while submitting Cassandra cluster stats: ignoring", exc_info=True)
+            log.debug("Error occurred while submitting Cassandra cluster stats: ignoring", exc_info=True)
 
         return self._request_timer

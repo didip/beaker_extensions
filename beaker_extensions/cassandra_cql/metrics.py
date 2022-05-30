@@ -11,12 +11,13 @@ log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from cassandra.cluster import Cluster
-    from typing import Text, Literal
+    from typing import Text, Literal, Optional, List
 
     class _StatsdService(Protocol):
         def increment(
             self,
             metric,  # type: Text
+            tags=None,  # type: Optional[List[str]]
         ):
             pass
 
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
             self,
             metric,  # type: Text
             value,  # type: float
+            sample_rate=None,  # type: Optional[float]
         ):
             pass
 
@@ -96,25 +98,21 @@ class _SupportsMetrics(Protocol):
 _ClusterStats = TypedDict("_ClusterStats", {"known_hosts": int, "connected_hosts": int, "open_connections": int})
 
 
-def _one_in_n(n=10000):
-    return random() < (1 / n)
-
-
 class StatsdMetrics:
     """StatsdMetrics is intended to be a drop-in replacement for cassandra.metrics.Metrics for a Cluster instance."""
 
-    _STATS_PREFIX = "dd.cassandra_cql.cluster."
+    _STATS_PREFIX = "dd.cassandra_cql.driver."
 
     def __init__(
         self,
         cluster_proxy,  # type: weakref.ProxyType[Cluster]
         stats_service=statsd,  # type: _StatsdService
-        is_lucky=_one_in_n,
+        cluster_stats_sample_rate=0.0002,  # type: float  # one in five-thousand
     ):
         self._cluster_proxy = cluster_proxy
         self._statsd = stats_service
-        self._request_timer = _RequestTimer(self._statsd, self._STATS_PREFIX + "query_latency.distribution")
-        self._is_lucky = is_lucky
+        self._request_timer = _RequestTimer(self._statsd, self._STATS_PREFIX + "response.latency")
+        self._cluster_stats_sample_rate = cluster_stats_sample_rate
 
     @classmethod
     def bind_ref(
@@ -129,7 +127,7 @@ class StatsdMetrics:
         status,  # type: ResponseStatus
     ):
         try:
-            self._statsd.increment(self._STATS_PREFIX + "response." + status)
+            self._statsd.increment(self._STATS_PREFIX + "response", tags=["status:%s" % status])
         except Exception:
             log.debug("Error occurred while submitting Cassandra response stats: ignoring", exc_info=True)
 
@@ -168,16 +166,17 @@ class StatsdMetrics:
         self._on_response("write_timeout")
 
     def _submit_cluster_gauges(self):
-        # NOTE: generating these stats don't often change, and they're relatively
-        # expensive to calculate given their value. For this reason we'll only
-        # bother to tabulate and submit them given some random sample.
-        if not self._is_lucky():
+        # NOTE: These stats don't often change, and they're relatively expensive
+        # to calculate given the utility that they provide. For these reasons
+        # we'll only bother to tabulate and submit them given some random
+        # sampling.
+        if not random() < self._cluster_stats_sample_rate:
             return
 
         stats = self._generate_cluster_stats()
-        self._statsd.gauge(self._STATS_PREFIX + "num_known_hosts", stats["known_hosts"])
-        self._statsd.gauge(self._STATS_PREFIX + "num_connected_hosts", stats["connected_hosts"])
-        self._statsd.gauge(self._STATS_PREFIX + "num_open_connections", stats["open_connections"])
+        self._statsd.gauge(self._STATS_PREFIX + "num_known_hosts", stats["known_hosts"], sample_rate=1)
+        self._statsd.gauge(self._STATS_PREFIX + "num_connected_hosts", stats["connected_hosts"], sample_rate=1)
+        self._statsd.gauge(self._STATS_PREFIX + "num_open_connections", stats["open_connections"], sample_rate=1)
 
     def _generate_cluster_stats(self):  # type: (...) -> _ClusterStats
         known_hosts = len(self._cluster_proxy.metadata.all_hosts())

@@ -11,30 +11,9 @@ log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from cassandra.cluster import Cluster
-    from typing import Text, Literal, Optional, List
+    from typing import Text, Literal
 
-    class _StatsdService(Protocol):
-        def increment(
-            self,
-            metric,  # type: Text
-            tags=None,  # type: Optional[List[str]]
-        ):
-            pass
-
-        def gauge(
-            self,
-            metric,  # type: Text
-            value,  # type: float
-            sample_rate=None,  # type: Optional[float]
-        ):
-            pass
-
-        def distribution(
-            self,
-            metric,  # type: Text
-            value,  # type: float
-        ):
-            pass
+    from datadog.dogstatsd.base import DogStatsd as _StatsdService
 
     ResponseStatus = Literal[
         "connection_error",

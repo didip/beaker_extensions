@@ -1,3 +1,8 @@
+# 0.4.0+dd.0
+
+- optionally report cassandra metrics to statsd by passing
+  `cluster_metrics_enabled=True` to the `CassandraCqlManager`.
+
 # 0.3.0+dd.5
 - allow cassandra query timeout to be set as `float`
 - depend on non-datadog [beaker in same version as Dogweb](https://github.com/DataDog/dogweb/blob/prod/requirements.in#L102) 

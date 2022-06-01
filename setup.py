@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
-version = "0.3.0+dd.5"
+version = "0.4.0+dd.0"
 
-TESTS_REQUIRE = ["nose"]
+TESTS_REQUIRE = ["nose", "mock==2.0.0"]
 
 setup(
     name="beaker_extensions",

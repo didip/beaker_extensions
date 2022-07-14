@@ -49,7 +49,7 @@ class AlwaysRetryNextHostPolicy(RetryPolicy):
         """
         Our goal here is to only allow one retry
         """
-        if retry_num == 1:
+        if retry_num == 0:
             return self.RETRY_NEXT_HOST, None
         else:
             return self.RETHROW, None

@@ -1,3 +1,7 @@
+# 0.4.0+dd.1
+
+- Configure a retry policy for request errors (next host, 1 retry)
+
 # 0.4.0+dd.0
 
 - optionally report cassandra metrics to statsd by passing

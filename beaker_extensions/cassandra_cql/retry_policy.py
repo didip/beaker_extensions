@@ -1,11 +1,11 @@
 from beaker.exceptions import InvalidCacheBackendError
 
 try:
-    from cassandra.policies import (
-        RetryPolicy,
-    )
+    from cassandra.policies import RetryPolicy
 except ImportError:
-    raise InvalidCacheBackendError("cassandra_cql backend requires the 'cassandra-driver' library")
+    raise InvalidCacheBackendError(
+        "cassandra_cql backend requires the 'cassandra-driver' library"
+    )
 
 
 class AlwaysRetryNextHostPolicy(RetryPolicy):
@@ -37,7 +37,18 @@ class AlwaysRetryNextHostPolicy(RetryPolicy):
         else:
             return self.RETHROW, None
 
-    def on_unavailable(self, query, consistency, required_replicas, alive_replicas, retry_num):
+    def on_unavailable(
+        self, query, consistency, required_replicas, alive_replicas, retry_num
+    ):
+        if retry_num == 0:
+            return self.RETRY_NEXT_HOST, None
+        else:
+            return self.RETHROW, None
+
+    def on_request_error(self, query, consistency, error, retry_num):
+        """
+        Our goal here is to only allow one retry
+        """
         if retry_num == 0:
             return self.RETRY_NEXT_HOST, None
         else:

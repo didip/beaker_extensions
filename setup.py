@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.4.0+dd.0"
+version = "0.4.0+dd.1"
 
 TESTS_REQUIRE = ["nose", "mock==2.0.0"]
 

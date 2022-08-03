@@ -154,6 +154,15 @@ class _CassandraBackedDict(object):
         # and wouldn't retry if there was a failure reaching cassandra at all.
         cluster_params["default_retry_policy"] = AlwaysRetryNextHostPolicy()
 
+        # These values are used so that cassandra server topology can be changed in a longer time-window
+        # giving the servers enough time before mcnulties start trying to connect to these machines again
+        # For reference, see #incident-15792 and
+        # https://docs.datastax.com/en/developer/python-driver/3.25/api/cassandra/cluster/
+        cluster_params["schema_event_refresh_window"] = 300
+        cluster_params["topology_event_refresh_window"] = 300
+        cluster_params["status_event_refresh_window"] = 300
+
+
         # If username and password is provided in the params
         # then include an auth provider when connecting to the cluster
         if "username" in params and "password" in params:

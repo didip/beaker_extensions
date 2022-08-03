@@ -1,3 +1,10 @@
+# 0.4.0+dd.2
+
+Configure the following params for cluster driver to allow for a longer topology change window
+- schema_event_refresh_window
+- topology_event_refresh_window
+- status_event_refresh_window
+
 # 0.4.0+dd.1
 
 - Configure a retry policy for request errors (next host, 1 retry)
